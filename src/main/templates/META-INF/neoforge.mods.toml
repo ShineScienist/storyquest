@@ -1,0 +1,48 @@
+# StoryQuest — NeoForge mod metadata
+# Expanded by Gradle (see generateModMetadata in build.gradle).
+
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+logoFile="storyquest.png"
+authors="ShineCreator"
+credits="Story-first quest system for adventure maps and RP servers. A lightweight, command-friendly alternative to FTB Quests."
+description='''
+StoryQuest is a story-driven quest system for Minecraft maps.
+
+Create quests in game (K), read them in the journal (J), show dialogues,
+track objectives on the HUD and drive the story from commands and command blocks.
+Quests are stored in the world; no datapacks and no restart.
+
+- In-game quest editor (operator only)
+- Journal with chapters, objective status, conditions and branches
+- Configurable HUD tracker
+- Waypoints: a HUD compass and in-world markers for visit objectives
+- Per-objective marker color, icon and label
+- Dialogue screens with a narrator and pages
+- Manual objectives (command/script) and visit objectives (dimension + X/Y/Z + radius)
+- Conditions and branches: required quests, all/any mode, hidden quests
+- Co-op shared quests with one world progress and shared reset
+- JSON export and import with validation, merge/replace and DAT backups
+- Commands on quest start and completion, run as the player
+- Per-player progress that survives death; shared progress is stored in the world
+'''
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
