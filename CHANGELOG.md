@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0-beta.2
+
+Fixes for the first beta build.
+
+- Softer ink: primary text `#5A4530`, secondary `#6E563E`, muted `#7E6547`.
+  Text stays readable on both parchment and book pages without looking black.
+- No drop shadows on theme text, so titles and list rows are no longer doubled.
+- Fixed five Russian theme strings that shipped as `???` in beta.1:
+  quest counter, journal theme label, theme names (Пергамент/Книга) and the
+  `theme` option name in the client config.
+
 ## 1.3.0-beta.1
 
 Interface themes: Paper and Book. This is a visual release, quest data and server logic are unchanged.

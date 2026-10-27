@@ -78,7 +78,7 @@ public class QuestButton extends Button {
         if (font.width(label) > maxWidth) {
             label = Component.literal(font.plainSubstrByWidth(label.getString(), maxWidth));
         }
-        graphics.drawCenteredString(font, label, getX() + getWidth() / 2, textY, color);
+        graphics.drawString(font, label, getX() + (getWidth() - font.width(label)) / 2, textY, color, false);
     }
 
     private void drawFocus(GuiGraphics graphics, QuestTheme theme) {

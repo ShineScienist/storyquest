@@ -20,15 +20,15 @@ public enum QuestTheme implements TranslatableEnum {
             false,
             new Palette(
                     0xFF8C3B32,
-                    0xFF4A3624,
-                    0xFF5E4933,
-                    0xFF8B7355,
+                    0xFF5A4530,
+                    0xFF6E563E,
+                    0xFF7E6547,
                     0xFFF0E3C4,
                     0xFF3F7A4A,
                     0xFF8C3B32,
                     0xFFA8702A,
                     0x66B49A70,
-                    0xFF4A3624,
+                    0xFF5A4530,
                     10
             )
     ),
@@ -37,9 +37,9 @@ public enum QuestTheme implements TranslatableEnum {
             true,
             new Palette(
                     0xFF9E2B25,
-                    0xFF4A3624,
-                    0xFF5E4933,
-                    0xFF8B7355,
+                    0xFF5A4530,
+                    0xFF6E563E,
+                    0xFF7E6547,
                     0xFFF3E7C8,
                     0xFF3F7A4A,
                     0xFF9E2B25,

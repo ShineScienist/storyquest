@@ -14,7 +14,7 @@
 | Jar | `build\libs\storyquest-<version>.jar` (собирается `gradlew build`) |
 | Иконка 128×128 | `src\main\resources\storyquest.png` |
 | Лицензия | `LICENSE` (MIT) |
-| Версия | из `gradle.properties`; сейчас `1.3.0-beta.1`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
+| Версия | из `gradle.properties`; сейчас `1.3.0-beta.2`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
 | Среда | клиент и сервер (Client and server) |
 
 Проверка перед загрузкой:
