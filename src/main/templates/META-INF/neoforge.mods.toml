@@ -11,6 +11,8 @@ version="${mod_version}"
 displayName="${mod_name}"
 logoFile="storyquest.png"
 authors="ShineCreator"
+displayURL="https://github.com/ShineScienist/storyquest"
+issueTrackerURL="https://github.com/ShineScienist/storyquest/issues"
 credits="Story-first quest system for adventure maps and RP servers. A lightweight, command-friendly alternative to FTB Quests."
 description='''
 StoryQuest is a story-driven quest system for Minecraft maps.
