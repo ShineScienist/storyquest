@@ -12,6 +12,7 @@ public class QuestEditBox extends EditBox {
     public QuestEditBox(Font font, int x, int y, int width, int height) {
         super(font, x, y, width, height, Component.empty());
         setBordered(false);
+        setTextShadow(false);
         setTextColor(QuestTheme.current().text());
         setTextColorUneditable(QuestTheme.current().textMuted());
     }
