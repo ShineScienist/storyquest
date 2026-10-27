@@ -21,6 +21,7 @@ Quests are stored in the world; no datapacks and no restart.
 
 - In-game quest editor (operator only)
 - Journal with chapters, objective status, conditions and branches
+- Two interface themes: Paper (parchment) and Book (leather-bound)
 - Configurable HUD tracker
 - Waypoints: a HUD compass and in-world markers for visit objectives
 - Per-objective marker color, icon and label

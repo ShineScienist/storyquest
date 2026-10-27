@@ -1,9 +1,11 @@
 package com.shinecreator.storyquest.client;
 
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
- * Client-side look and feel: HUD placement, scale and colors.
+ * Client-side look and feel: HUD placement, scale and interface theme.
  * Everything here is optional eye candy, quests work without it.
  */
 public final class StoryQuestClientConfig {
@@ -76,41 +78,15 @@ public final class StoryQuestClientConfig {
             .comment("Scale of the floating marker icons.")
             .defineInRange("waypointIconScale", 1.0D, 0.5D, 2.0D);
 
-    public static final ModConfigSpec.ConfigValue<String> ACCENT_COLOR = BUILDER
-            .comment("Accent color used by quest UI, as #RRGGBB.")
-            .define("accentColor", "#FFC94A");
-
-    public static final ModConfigSpec.ConfigValue<String> PANEL_COLOR = BUILDER
-            .comment("Panel background color used by quest UI, as #RRGGBB.")
-            .define("panelColor", "#12141C");
+    public static final ModConfigSpec.EnumValue<QuestTheme> THEME = BUILDER
+            .comment("Interface theme: PAPER (parchment) or BOOK (leather-bound).")
+            .defineEnum("theme", QuestTheme.PAPER);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     private StoryQuestClientConfig() {}
 
-    public static int accentColor() {
-        return parseColor(ACCENT_COLOR.get(), 0xFFFFC94A);
-    }
-
-    public static int panelColor() {
-        return parseColor(PANEL_COLOR.get(), 0xFF12141C);
-    }
-
-    private static int parseColor(String value, int fallback) {
-        if (value == null) {
-            return fallback;
-        }
-        String hex = value.trim().replace("#", "");
-        try {
-            if (hex.length() == 6) {
-                return 0xFF000000 | Integer.parseInt(hex, 16);
-            }
-            if (hex.length() == 8) {
-                return (int) Long.parseLong(hex, 16);
-            }
-        } catch (NumberFormatException ignored) {
-            // fall through to the default
-        }
-        return fallback;
+    public static QuestTheme theme() {
+        return THEME.get();
     }
 }

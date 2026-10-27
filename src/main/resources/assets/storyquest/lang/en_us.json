@@ -2,7 +2,6 @@
   "key.categories.storyquest": "StoryQuest",
   "key.storyquest.journal": "Open Quest Journal",
   "key.storyquest.editor": "Open Quest Editor (operator)",
-
   "storyquest.journal.title": "Quest Journal",
   "storyquest.journal.no_chapter": "No chapter",
   "storyquest.journal.objectives": "Objectives",
@@ -21,7 +20,6 @@
   "storyquest.journal.branch_chosen": "Branch chosen: %s",
   "storyquest.journal.empty": "No quests yet.",
   "storyquest.journal.empty_hint": "The map author can create quests in the editor (K).",
-
   "storyquest.button.close": "Close",
   "storyquest.button.save": "Save",
   "storyquest.button.cancel": "Cancel",
@@ -33,10 +31,8 @@
   "storyquest.button.next": "Next",
   "storyquest.button.ok": "OK",
   "storyquest.button.done": "Done",
-
   "storyquest.objective.type.manual": "Manual",
   "storyquest.objective.type.visit": "Visit",
-
   "storyquest.editor.title": "Quest Editor",
   "storyquest.editor.form_title": "Quest: %s",
   "storyquest.editor.objective_title": "Objective",
@@ -108,7 +104,6 @@
   "storyquest.editor.conditions.summary_shared": "Shared",
   "storyquest.editor.conditions.summary_branch": "Branch: %s",
   "storyquest.editor.conditions.summary_none": "No conditions",
-
   "storyquest.marker.title": "Objective marker",
   "storyquest.marker.show": "Show marker",
   "storyquest.marker.beam": "Light beam",
@@ -121,11 +116,9 @@
   "storyquest.marker.icon.check": "Checkmark",
   "storyquest.marker.icon.pin": "Pin",
   "storyquest.marker.icon.star": "Star",
-
   "storyquest.waypoint.distance": "%s m",
   "storyquest.waypoint.other_dimension": "another dimension",
   "storyquest.waypoint.here": "you are here",
-
   "storyquest.command.started": "Quest started: %1$s (%2$s player(s))",
   "storyquest.command.completed": "Quest completed: %1$s (%2$s player(s))",
   "storyquest.command.objective_done": "Objective completed: %1$s (%2$s player(s))",
@@ -149,7 +142,6 @@
   "storyquest.command.dialogue": "Dialogue sent to %2$s player(s)",
   "storyquest.command.no_targets": "Nothing changed for the selected players.",
   "storyquest.command.no_quests": "This world has no quests yet.",
-
   "storyquest.message.quest_started": "New quest: %s",
   "storyquest.message.quest_completed": "Quest complete: %s",
   "storyquest.message.objective_completed": "Objective complete: %s",
@@ -163,7 +155,6 @@
   "storyquest.message.invalid_id": "Invalid quest id. Use only a-z, 0-9 and _.",
   "storyquest.message.duplicate_id": "A quest with id \"%s\" already exists.",
   "storyquest.message.no_permission": "You need operator permissions for this.",
-
   "storyquest.configuration.title": "StoryQuest Settings",
   "storyquest.configuration.section.storyquest.common.toml": "StoryQuest Gameplay",
   "storyquest.configuration.section.storyquest.common.toml.title": "StoryQuest Gameplay",
@@ -171,7 +162,6 @@
   "storyquest.configuration.showChatMessages": "Show quest chat messages",
   "storyquest.configuration.playSounds": "Play quest sounds",
   "storyquest.configuration.allowManualStartFromJournal": "Allow accepting quests from the journal",
-
   "storyquest.configuration.section.storyquest.client.toml": "StoryQuest Interface",
   "storyquest.configuration.section.storyquest.client.toml.title": "StoryQuest Interface",
   "storyquest.configuration.showHud": "Show quest tracker",
@@ -193,6 +183,9 @@
   "storyquest.configuration.waypointBeamHeight": "Light beam height",
   "storyquest.configuration.waypointMaxDistance": "Marker render distance",
   "storyquest.configuration.waypointIconScale": "Marker icon scale",
-  "storyquest.configuration.accentColor": "Accent color (#RRGGBB)",
-  "storyquest.configuration.panelColor": "Panel color (#RRGGBB)"
+  "storyquest.journal.quest_count": "Quests: %s",
+  "storyquest.journal.theme": "Theme: %s",
+  "storyquest.theme.paper": "Paper",
+  "storyquest.theme.book": "Book",
+  "storyquest.configuration.theme": "Interface theme"
 }

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.shinecreator.storyquest.client.ClientQuestCache;
 import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.quest.Objective;
 import com.shinecreator.storyquest.quest.Quest;
 
@@ -76,27 +78,31 @@ public final class QuestHud {
         int x = left ? offsetX : screenWidth - offsetX - scaledWidth;
         int y = top ? offsetY : screenHeight - offsetY - scaledHeight;
 
-        int alpha = (int) Math.round(StoryQuestClientConfig.HUD_BACKGROUND_OPACITY.get() * 255.0D) << 24;
-        int background = (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | alpha;
-        int accent = StoryQuestClientConfig.accentColor();
+        int alphaValue = (int) Math.round(StoryQuestClientConfig.HUD_BACKGROUND_OPACITY.get() * 255.0D);
+        float backgroundAlpha = alphaValue / 255.0F;
+        QuestTheme theme = QuestTheme.current();
 
         var pose = graphics.pose();
         pose.pushPose();
         pose.translate(x, y, 0);
         pose.scale((float) scale, (float) scale, 1.0F);
 
-        graphics.fill(0, 0, panelWidth, panelHeight, background);
-        graphics.fill(0, 0, 3, panelHeight, accent);
-        graphics.drawString(minecraft.font, title, 8, 5, accent, true);
+        graphics.setColor(1.0F, 1.0F, 1.0F, backgroundAlpha);
+        QuestUiRenderer.drawHudPanel(graphics, 0, 0, panelWidth, panelHeight);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.fill(0, 0, 3, panelHeight, QuestUiRenderer.alpha(theme.accent(), backgroundAlpha));
+
+        int titleColor = theme.bookStyle() ? theme.hudText() : theme.accent();
+        graphics.drawString(minecraft.font, title, 8, 5, titleColor, false);
 
         int lineY = 17;
         for (int i = 0; i < shown; i++) {
-            int color = doneFlags[i] ? 0xFF7CD992 : 0xFFD8D8DE;
+            int color = doneFlags[i] ? theme.hudPositive() : theme.hudText();
             graphics.drawString(minecraft.font, lines[i], 8, lineY, color, false);
             lineY += 10;
         }
         if (overflow > 0) {
-            graphics.drawString(minecraft.font, "+" + overflow, 8, lineY, 0xFF8A8FA0, false);
+            graphics.drawString(minecraft.font, "+" + overflow, 8, lineY, theme.hudMuted(), false);
         }
 
         pose.popPose();

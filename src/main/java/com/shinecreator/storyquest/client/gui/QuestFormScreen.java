@@ -8,7 +8,11 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestEditBox;
+import com.shinecreator.storyquest.client.gui.theme.QuestMultiLineBox;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.network.QuestPayloads;
 import com.shinecreator.storyquest.quest.MarkerIcon;
 import com.shinecreator.storyquest.quest.Objective;
@@ -16,9 +20,6 @@ import com.shinecreator.storyquest.quest.Quest;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -45,7 +46,7 @@ public class QuestFormScreen extends Screen {
     private final QuestEditorScreen parent;
     private final Quest draft;
     private final String originalId;
-    private final Map<Tab, Button> tabButtons = new EnumMap<>(Tab.class);
+    private final Map<Tab, QuestButton> tabButtons = new EnumMap<>(Tab.class);
     private final List<Label> labels = new ArrayList<>();
 
     private Tab tab = Tab.MAIN;
@@ -72,14 +73,16 @@ public class QuestFormScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(520, width - 16);
-        panelHeight = Math.min(336, height - 16);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(540, width - 16);
+        panelHeight = Math.min(340, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
-        contentX = panelX + 16;
-        contentWidth = panelWidth - 32;
-        contentY = panelY + 48;
-        contentBottom = panelY + panelHeight - 32;
+        contentX = panelX + padding;
+        contentWidth = panelWidth - padding * 2;
+        contentY = panelY + 50;
+        contentBottom = panelY + panelHeight - padding - 24;
 
         labels.clear();
         tabButtons.clear();
@@ -88,16 +91,17 @@ public class QuestFormScreen extends Screen {
         int tabWidth = (contentWidth - (tabs.length - 1) * 4) / tabs.length;
         for (int i = 0; i < tabs.length; i++) {
             Tab value = tabs[i];
-            Button button = addRenderableWidget(Button.builder(Component.translatable(value.key), widget -> switchTab(value))
-                    .bounds(contentX + i * (tabWidth + 4), panelY + 26, tabWidth, 18).build());
+            QuestButton button = addRenderableWidget(QuestButton.normal(Component.translatable(value.key),
+                    widget -> switchTab(value), contentX + i * (tabWidth + 4), panelY + 26, tabWidth, 18));
+            button.setSelected(value == tab);
             tabButtons.put(value, button);
         }
 
-        int bottom = panelY + panelHeight - 26;
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.save"), button -> save())
-                .bounds(panelX + panelWidth - 16 - 76, bottom, 76, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.cancel"), button -> cancel())
-                .bounds(panelX + panelWidth - 16 - 76 - 82, bottom, 78, 18).build());
+        int bottom = panelY + panelHeight - padding - 18;
+        addRenderableWidget(QuestButton.primary(Component.translatable("storyquest.button.save"),
+                button -> save(), panelX + panelWidth - padding - 76, bottom, 76, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.cancel"),
+                button -> cancel(), panelX + panelWidth - padding - 76 - 6 - 78, bottom, 78, 18));
 
         switch (tab) {
             case MAIN -> buildMain();
@@ -152,9 +156,8 @@ public class QuestFormScreen extends Screen {
 
         int conditionsY = flagsTop + 46;
         if (conditionsY < contentBottom - 10) {
-            addRenderableWidget(Button.builder(Component.translatable("storyquest.editor.conditions_button"),
-                    button -> openConditions())
-                    .bounds(contentX, conditionsY, 150, 18).build());
+            addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.editor.conditions_button"),
+                    button -> openConditions(), contentX, conditionsY, 150, 18));
             labels.add(new Label(contentX + 158, conditionsY + 5, conditionSummary()));
         }
     }
@@ -229,16 +232,15 @@ public class QuestFormScreen extends Screen {
         for (int i = 0; i < shown; i++) {
             int index = objectiveScroll + i;
             int rowY = objectiveRowsTop + i * 24;
-            addRenderableWidget(Button.builder(Component.translatable("storyquest.button.edit_short"),
-                    button -> openObjective(index))
-                    .bounds(contentX + contentWidth - 66, rowY + 1, 44, 18).build());
-            addRenderableWidget(Button.builder(Component.literal("X"), button -> removeObjective(index))
-                    .bounds(contentX + contentWidth - 20, rowY + 1, 20, 18).build());
+            addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.edit_short"),
+                    button -> openObjective(index), contentX + contentWidth - 66, rowY + 1, 44, 18));
+            addRenderableWidget(QuestButton.normal(Component.literal("X"), button -> removeObjective(index),
+                    contentX + contentWidth - 20, rowY + 1, 20, 18));
         }
 
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.add_objective"),
-                button -> openObjective(draft.objectives.size()))
-                .bounds(contentX, objectiveRowsTop + objectiveRows * 24 + 2, 120, 18).build());
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.add_objective"),
+                button -> openObjective(draft.objectives.size()),
+                contentX, objectiveRowsTop + objectiveRows * 24 + 2, 120, 18));
     }
 
     private void buildScript() {
@@ -263,7 +265,7 @@ public class QuestFormScreen extends Screen {
     // ------------------------------------------------------------------ widget helpers
 
     private void addEditBox(int x, int y, int width, String value, Consumer<String> responder, int maxLength) {
-        EditBox box = new EditBox(font, x, y, width, 18, Component.empty());
+        QuestEditBox box = new QuestEditBox(font, x, y, width, 18);
         box.setMaxLength(maxLength);
         box.setValue(value == null ? "" : value);
         box.setResponder(responder);
@@ -271,7 +273,7 @@ public class QuestFormScreen extends Screen {
     }
 
     private void addMultiLine(int x, int y, int width, int height, String value, Consumer<String> responder) {
-        MultiLineEditBox box = new MultiLineEditBox(font, x, y, width, height, Component.empty(), Component.empty());
+        QuestMultiLineBox box = new QuestMultiLineBox(font, x, y, width, height);
         box.setCharacterLimit(4000);
         box.setValue(value == null ? "" : value);
         box.setValueListener(responder);
@@ -279,10 +281,10 @@ public class QuestFormScreen extends Screen {
     }
 
     private void addFlagButton(int x, int y, int width, String key, BooleanSupplier getter, Runnable toggler) {
-        Button button = Button.builder(flagLabel(key, getter.getAsBoolean()), widget -> {
+        QuestButton button = QuestButton.normal(flagLabel(key, getter.getAsBoolean()), widget -> {
             toggler.run();
             widget.setMessage(flagLabel(key, getter.getAsBoolean()));
-        }).bounds(x, y, width, 18).build();
+        }, x, y, width, 18);
         addRenderableWidget(button);
     }
 
@@ -374,22 +376,20 @@ public class QuestFormScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight,
-                (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xF0101218);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 44, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 44, panelX + panelWidth, panelY + 45, accent);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
 
         graphics.drawString(font, Component.translatable("storyquest.editor.form_title", draft.id),
-                contentX, panelY + 9, accent, true);
+                contentX, panelY + 9, theme.text(), false);
         if (error != null) {
             graphics.drawString(font, error, contentX + contentWidth - font.width(error),
-                    panelY + 9, 0xFFFF6B6B, false);
+                    panelY + 9, theme.negative(), false);
         }
+        QuestUiRenderer.drawDivider(graphics, contentX, panelY + 44, contentWidth);
 
         for (Label label : labels) {
-            graphics.drawString(font, label.text(), label.x(), label.y(), 0xFFA8ADBC, false);
+            graphics.drawString(font, label.text(), label.x(), label.y(), theme.textDim(), false);
         }
         if (tab == Tab.OBJECTIVES) {
             drawObjectiveRows(graphics);
@@ -397,8 +397,9 @@ public class QuestFormScreen extends Screen {
 
         for (var entry : tabButtons.entrySet()) {
             entry.getValue().active = entry.getKey() != tab;
+            entry.getValue().setSelected(entry.getKey() == tab);
         }
-        graphics.fill(panelX, contentBottom + 4, panelX + panelWidth, contentBottom + 5, 0x30FFFFFF);
+        QuestUiRenderer.drawDivider(graphics, contentX, contentBottom + 4, contentWidth);
 
         for (var renderable : this.renderables) {
             renderable.render(graphics, mouseX, mouseY, partialTick);
@@ -406,9 +407,10 @@ public class QuestFormScreen extends Screen {
     }
 
     private void drawObjectiveRows(GuiGraphics graphics) {
+        QuestTheme theme = QuestTheme.current();
         if (draft.objectives.isEmpty()) {
             graphics.drawString(font, Component.translatable("storyquest.editor.no_objectives"),
-                    contentX, objectiveRowsTop + 4, 0xFF8A8FA0, false);
+                    contentX, objectiveRowsTop + 4, theme.textMuted(), false);
             return;
         }
         int shown = Math.min(objectiveRows, draft.objectives.size() - objectiveScroll);
@@ -419,7 +421,7 @@ public class QuestFormScreen extends Screen {
             String type = Component.translatable(objective.type.translationKey()).getString();
             String line = (index + 1) + ". [" + type + "] " + objective.displayText();
             graphics.drawString(font, font.plainSubstrByWidth(line, contentWidth - 72),
-                    contentX, rowY + 6, 0xFFD8D8DE, false);
+                    contentX, rowY + 6, theme.textDim(), false);
             if (objective.type == Objective.Type.VISIT) {
                 String coords = String.format(Locale.ROOT, "%.0f %.0f %.0f  r=%.0f",
                         objective.x, objective.y, objective.z, objective.radius);
@@ -427,13 +429,13 @@ public class QuestFormScreen extends Screen {
                     MarkerIcon icon = objective.markerIcon == null ? MarkerIcon.CHECK : objective.markerIcon;
                     MarkerIcons.draw(graphics, icon, contentX, rowY + 13, 10, objective.markerColor, 0.9F);
                 }
-                graphics.drawString(font, coords, contentX + 14, rowY + 16, 0xFF6A6F80, false);
+                graphics.drawString(font, coords, contentX + 14, rowY + 16, theme.textMuted(), false);
             }
         }
         if (draft.objectives.size() > objectiveRows) {
             String more = (objectiveScroll + 1) + "-" + (objectiveScroll + shown) + " / " + draft.objectives.size();
             graphics.drawString(font, more, contentX + contentWidth - font.width(more) - 70,
-                    objectiveRowsTop + objectiveRows * 24 + 7, 0xFF6A6F80, false);
+                    objectiveRowsTop + objectiveRows * 24 + 7, theme.textMuted(), false);
         }
     }
 

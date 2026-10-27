@@ -5,12 +5,14 @@ import java.util.List;
 
 import com.shinecreator.storyquest.client.ClientQuestCache;
 import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.network.QuestPayloads;
 import com.shinecreator.storyquest.quest.Objective;
 import com.shinecreator.storyquest.quest.Quest;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -20,18 +22,25 @@ import net.neoforged.neoforge.network.PacketDistributor;
  */
 public class QuestJournalScreen extends Screen {
     private static final int ROW_HEIGHT = 18;
+    private static final int HEADER_HEIGHT = 28;
 
     private final List<Row> rows = new ArrayList<>();
     private int panelX;
     private int panelY;
     private int panelWidth;
     private int panelHeight;
+    private int listX;
+    private int listY;
     private int listWidth;
+    private int listHeight;
+    private int detailX;
+    private int detailWidth;
+    private int bottom;
     private int scroll;
     private String selectedId;
     private int seenVersion = -1;
-    private Button trackButton;
-    private Button acceptButton;
+    private QuestButton trackButton;
+    private QuestButton acceptButton;
 
     private record Row(String questId, String chapter, boolean header) {}
 
@@ -41,22 +50,52 @@ public class QuestJournalScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(540, width - 20);
-        panelHeight = Math.min(320, height - 20);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(560, width - 20);
+        panelHeight = Math.min(336, height - 20);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
-        listWidth = Math.max(120, Math.min(180, panelWidth / 3));
+        bottom = panelY + panelHeight - padding - 18;
+
+        listWidth = Math.max(140, Math.min(190, panelWidth / 3));
+        listX = panelX + padding;
+        listY = panelY + 38;
+        listHeight = Math.max(40, bottom - 8 - listY);
+
+        int spineGap = theme.bookStyle() ? 24 : 16;
+        detailX = listX + listWidth + spineGap;
+        detailWidth = panelX + panelWidth - padding - detailX;
 
         seenVersion = ClientQuestCache.version();
         rebuildRows();
 
-        int bottom = panelY + panelHeight - 26;
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.close"), button -> onClose())
-                .bounds(panelX + panelWidth - 78, bottom, 70, 18).build());
-        trackButton = addRenderableWidget(Button.builder(Component.translatable("storyquest.journal.track"), button -> toggleTrack())
-                .bounds(panelX + panelWidth - 78 - 96, bottom, 90, 18).build());
-        acceptButton = addRenderableWidget(Button.builder(Component.translatable("storyquest.journal.accept"), button -> accept())
-                .bounds(panelX + panelWidth - 78 - 96 - 96, bottom, 90, 18).build());
+        acceptButton = addRenderableWidget(QuestButton.primary(
+                Component.translatable("storyquest.journal.accept"), button -> accept(),
+                panelX + panelWidth - padding - 70 - 6 - 78 - 6 - 78, bottom, 78, 18));
+        trackButton = addRenderableWidget(QuestButton.normal(
+                Component.translatable("storyquest.journal.track"), button -> toggleTrack(),
+                panelX + panelWidth - padding - 70 - 6 - 78, bottom, 78, 18));
+        addRenderableWidget(QuestButton.normal(
+                Component.translatable("storyquest.button.close"), button -> onClose(),
+                panelX + panelWidth - padding - 70, bottom, 70, 18));
+
+        int themeX = panelX + padding + font.width(title) + 10;
+        addRenderableWidget(QuestButton.normal(themeLabel(), button -> cycleTheme(),
+                themeX, panelY + 5, 112, 18));
+    }
+
+    private Component themeLabel() {
+        return Component.translatable("storyquest.journal.theme",
+                Component.translatable(QuestTheme.current().translationKey()));
+    }
+
+    private void cycleTheme() {
+        QuestTheme[] values = QuestTheme.values();
+        QuestTheme next = values[(QuestTheme.current().ordinal() + 1) % values.length];
+        StoryQuestClientConfig.THEME.set(next);
+        StoryQuestClientConfig.THEME.save();
+        rebuildWidgets();
     }
 
     private void rebuildRows() {
@@ -90,8 +129,7 @@ public class QuestJournalScreen extends Screen {
     }
 
     private int maxScroll() {
-        int listHeight = panelHeight - 78;
-        return Math.max(0, rows.size() * ROW_HEIGHT - listHeight);
+        return Math.max(0, rows.size() * ROW_HEIGHT - (listHeight - 4));
     }
 
     @Override
@@ -102,18 +140,22 @@ public class QuestJournalScreen extends Screen {
         }
 
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        int panel = StoryQuestClientConfig.panelColor();
-        int opaquePanel = (panel & 0x00FFFFFF) | 0xF0101218;
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
 
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, opaquePanel);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 24, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 24, panelX + panelWidth, panelY + 25, accent);
+        int innerRight = panelX + panelWidth - padding;
+        graphics.drawString(font, title, panelX + padding, panelY + 9, theme.text(), false);
 
-        graphics.drawString(font, title, panelX + 10, panelY + 8, accent, true);
-        String count = Integer.toString(rows.size() == 0 ? 0 : (int) rows.stream().filter(row -> !row.header()).count());
-        graphics.drawString(font, count, panelX + panelWidth - 10 - font.width(count), panelY + 8, 0xFF8A8FA0, false);
+        int count = (int) rows.stream().filter(row -> !row.header()).count();
+        String countText = Component.translatable("storyquest.journal.quest_count", count).getString();
+        int decorationWidth = theme.decoration().width();
+        graphics.drawString(font, countText, innerRight - decorationWidth - 8 - font.width(countText),
+                panelY + 10, theme.textMuted(), false);
+
+        QuestUiRenderer.drawDecoration(graphics, innerRight - decorationWidth, panelY + 6);
+
+        QuestUiRenderer.drawDivider(graphics, panelX + padding, panelY + HEADER_HEIGHT, panelWidth - padding * 2);
 
         drawQuestList(graphics, mouseX, mouseY);
         drawDetails(graphics);
@@ -132,11 +174,9 @@ public class QuestJournalScreen extends Screen {
     }
 
     private void drawQuestList(GuiGraphics graphics, int mouseX, int mouseY) {
-        int listX = panelX + 8;
-        int listY = panelY + 34;
-        int listHeight = panelHeight - 78;
+        QuestTheme theme = QuestTheme.current();
+        QuestUiRenderer.drawInset(graphics, listX - 4, listY - 4, listWidth + 8, listHeight + 8);
 
-        graphics.fill(listX, listY, listX + listWidth, listY + listHeight, 0x40000000);
         graphics.enableScissor(listX, listY, listX + listWidth, listY + listHeight);
         int y = listY - scroll;
         for (Row row : rows) {
@@ -145,76 +185,85 @@ public class QuestJournalScreen extends Screen {
                     String label = row.chapter().isBlank()
                             ? Component.translatable("storyquest.journal.no_chapter").getString()
                             : row.chapter();
-                    graphics.drawString(font, font.plainSubstrByWidth(label, listWidth - 8), listX + 4, y + 5, 0xFF8A8FA0, false);
-                    graphics.fill(listX + 4, y + 16, listX + listWidth - 4, y + 17, 0x40FFFFFF);
+                    graphics.drawString(font, font.plainSubstrByWidth(label, listWidth - 16), listX + 8, y + 4,
+                            theme.textMuted(), false);
+                    graphics.fill(listX + 8, y + 15, listX + listWidth - 8, y + 16,
+                            QuestUiRenderer.alpha(theme.textMuted(), 0.45F));
                 } else {
                     Quest quest = ClientQuestCache.get(row.questId());
                     if (quest != null) {
                         boolean selected = quest.id.equals(selectedId);
-                        boolean hovered = mouseX >= listX && mouseX < listX + listWidth && mouseY >= y && mouseY < y + ROW_HEIGHT;
+                        boolean hovered = mouseX >= listX && mouseX < listX + listWidth
+                                && mouseY >= y && mouseY < y + ROW_HEIGHT;
                         if (selected) {
-                            graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT, 0x50FFFFFF);
-                            graphics.fill(listX, y, listX + 2, y + ROW_HEIGHT, StoryQuestClientConfig.accentColor());
+                            graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT, theme.selection());
+                            graphics.fill(listX, y, listX + 3, y + ROW_HEIGHT, theme.accent());
                         } else if (hovered) {
-                            graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT, 0x20FFFFFF);
+                            graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT,
+                                    QuestUiRenderer.alpha(theme.accent(), 0.14F));
                         }
-                        String symbol;
-                        int color;
+                        String icon;
                         if (ClientQuestCache.isCompleted(quest.id)) {
-                            symbol = "\u2714";
-                            color = 0xFF7CD992;
+                            icon = "check";
                         } else if (ClientQuestCache.isActive(quest.id)) {
-                            symbol = "\u25CF";
-                            color = StoryQuestClientConfig.accentColor();
+                            icon = "star";
                         } else if (!ClientQuestCache.canStart(quest)) {
-                            symbol = "\u2716";
-                            color = 0xFFFF6B6B;
+                            icon = "lock";
                         } else {
-                            symbol = "\u25CB";
-                            color = 0xFF9A9FB0;
+                            icon = "scroll";
                         }
-                        graphics.drawString(font, symbol, listX + 6, y + 5, color, false);
-                        graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 24),
-                                listX + 18, y + 5, selected ? 0xFFFFFFFF : 0xFFD8D8DE, false);
+                        QuestUiRenderer.drawIcon(graphics, icon, listX + 7, y + 3, 12);
+                        graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 30),
+                                listX + 23, y + 5, theme.text(), false);
                     }
                 }
             }
             y += ROW_HEIGHT;
         }
         graphics.disableScissor();
+
+        if (maxScroll() > 0) {
+            QuestUiRenderer.drawScrollbar(graphics, listX + listWidth - 7, listY + 2, listHeight - 4,
+                    scroll, maxScroll(), listHeight - 4);
+        }
+
+        if (theme.bookStyle()) {
+            QuestUiRenderer.drawSpine(graphics, listX + listWidth + 8, listY, listHeight);
+        }
     }
 
     private void drawDetails(GuiGraphics graphics) {
-        int detailX = panelX + listWidth + 20;
-        int detailWidth = panelX + panelWidth - 10 - detailX;
+        QuestTheme theme = QuestTheme.current();
         Quest quest = ClientQuestCache.get(selectedId);
         if (quest == null) {
-            graphics.drawString(font, Component.translatable("storyquest.journal.empty"), detailX, panelY + 44, 0xFF8A8FA0, false);
-            graphics.drawString(font, Component.translatable("storyquest.journal.empty_hint"), detailX, panelY + 60, 0xFF6A6F80, false);
+            graphics.drawString(font, Component.translatable("storyquest.journal.empty"), detailX, panelY + 44,
+                    theme.textMuted(), false);
+            graphics.drawString(font, Component.translatable("storyquest.journal.empty_hint"), detailX, panelY + 60,
+                    theme.textMuted(), false);
             return;
         }
 
         graphics.drawString(font, font.plainSubstrByWidth(quest.title, detailWidth), detailX, panelY + 38,
-                StoryQuestClientConfig.accentColor(), true);
+                theme.text(), false);
 
         boolean branchLocked = ClientQuestCache.branchLocked(quest);
         String state;
         int stateColor;
         if (ClientQuestCache.isCompleted(quest.id)) {
             state = Component.translatable("storyquest.journal.state.completed").getString();
-            stateColor = 0xFF7CD992;
+            stateColor = theme.positive();
         } else if (ClientQuestCache.isActive(quest.id)) {
             state = Component.translatable("storyquest.journal.state.active").getString();
-            stateColor = StoryQuestClientConfig.accentColor();
+            stateColor = theme.accent();
         } else if (branchLocked) {
             state = Component.translatable("storyquest.journal.state.branch_locked").getString();
-            stateColor = 0xFFFF9B6B;
+            stateColor = theme.warning();
         } else if (!ClientQuestCache.requirementsMet(quest)) {
             state = Component.translatable("storyquest.journal.state.locked").getString();
-            stateColor = 0xFFFF6B6B;
+            stateColor = theme.negative();
         } else {
             state = Component.translatable("storyquest.journal.state.available").getString();
-            stateColor = 0xFF9A9FB0;
+            stateColor = theme.textMuted();
         }
         if (quest.scope == Quest.Scope.SHARED) {
             state += "  \u00B7  " + Component.translatable("storyquest.journal.shared").getString();
@@ -224,14 +273,14 @@ public class QuestJournalScreen extends Screen {
                 : quest.chapter;
         graphics.drawString(font, font.plainSubstrByWidth(chapter + "  \u00B7  " + state, detailWidth),
                 detailX, panelY + 53, stateColor, false);
-        graphics.fill(detailX, panelY + 66, detailX + detailWidth, panelY + 67, 0x40FFFFFF);
+        QuestUiRenderer.drawDivider(graphics, detailX, panelY + 66, detailWidth);
 
         int y = panelY + 74;
         if (!quest.requiredQuests.isEmpty()) {
             String requirementsKey = quest.requireAll
                     ? "storyquest.journal.requirements"
                     : "storyquest.journal.requirements_any";
-            graphics.drawString(font, Component.translatable(requirementsKey), detailX, y, 0xFF8A8FA0, false);
+            graphics.drawString(font, Component.translatable(requirementsKey), detailX, y, theme.textMuted(), false);
             y += 13;
             int shown = Math.min(quest.requiredQuests.size(), 4);
             for (int i = 0; i < shown; i++) {
@@ -241,13 +290,11 @@ public class QuestJournalScreen extends Screen {
                         ? Component.translatable("storyquest.journal.requirement_unknown").getString()
                         : required.title;
                 boolean done = ClientQuestCache.isCompleted(requiredId);
-                String line = (done ? "\u2714 " : "\u2022 ") + name;
-                graphics.drawString(font, font.plainSubstrByWidth(line, detailWidth), detailX, y,
-                        done ? 0xFF7CD992 : 0xFFD8D8DE, false);
-                y += 11;
+                y = drawSymbolLine(graphics, name, detailX, y, done, theme);
             }
             if (quest.requiredQuests.size() > shown) {
-                graphics.drawString(font, "+" + (quest.requiredQuests.size() - shown), detailX, y, 0xFF8A8FA0, false);
+                graphics.drawString(font, "+" + (quest.requiredQuests.size() - shown), detailX, y,
+                        theme.textMuted(), false);
                 y += 11;
             }
             y += 4;
@@ -257,37 +304,49 @@ public class QuestJournalScreen extends Screen {
             Quest winner = ClientQuestCache.branchWinner(quest);
             String line = Component.translatable("storyquest.journal.branch_chosen",
                     winner == null ? "???" : winner.title).getString();
-            graphics.drawString(font, font.plainSubstrByWidth(line, detailWidth), detailX, y, 0xFFFF9B6B, false);
+            graphics.drawString(font, font.plainSubstrByWidth(line, detailWidth), detailX, y,
+                    theme.warning(), false);
             y += 13;
         }
 
         if (!quest.objectives.isEmpty()) {
-            graphics.drawString(font, Component.translatable("storyquest.journal.objectives"), detailX, y, 0xFF8A8FA0, false);
+            graphics.drawString(font, Component.translatable("storyquest.journal.objectives"), detailX, y,
+                    theme.textMuted(), false);
             y += 13;
             int shown = Math.min(quest.objectives.size(), 7);
             for (int i = 0; i < shown; i++) {
                 Objective objective = quest.objectives.get(i);
                 boolean done = ClientQuestCache.isObjectiveDone(quest.id, i);
-                String line = (done ? "\u2714 " : "\u2022 ") + objective.displayText();
-                graphics.drawString(font, font.plainSubstrByWidth(line, detailWidth), detailX, y,
-                        done ? 0xFF7CD992 : 0xFFD8D8DE, false);
-                y += 11;
+                y = drawSymbolLine(graphics, objective.displayText(), detailX, y, done, theme);
             }
             if (quest.objectives.size() > shown) {
-                graphics.drawString(font, "+" + (quest.objectives.size() - shown), detailX, y, 0xFF8A8FA0, false);
+                graphics.drawString(font, "+" + (quest.objectives.size() - shown), detailX, y,
+                        theme.textMuted(), false);
                 y += 11;
             }
             y += 4;
         }
 
         if (!quest.description.isBlank()) {
-            List<net.minecraft.util.FormattedCharSequence> lines = font.split(Component.literal(quest.description), detailWidth);
-            int maxLines = Math.max(0, (panelY + panelHeight - 56 - y) / 10);
+            List<net.minecraft.util.FormattedCharSequence> lines =
+                    font.split(Component.literal(quest.description), detailWidth);
+            int maxLines = Math.max(0, (bottom - 8 - y) / 10);
             for (int i = 0; i < Math.min(lines.size(), maxLines); i++) {
-                graphics.drawString(font, lines.get(i), detailX, y, 0xFFB8BCC8, false);
+                graphics.drawString(font, lines.get(i), detailX, y, theme.textDim(), false);
                 y += 10;
             }
         }
+    }
+
+    private int drawSymbolLine(GuiGraphics graphics, String text, int x, int y, boolean done, QuestTheme theme) {
+        if (done) {
+            QuestUiRenderer.drawIcon(graphics, "check", x, y - 1, 9);
+        } else {
+            graphics.fill(x + 2, y + 4, x + 4, y + 6, theme.textMuted());
+        }
+        graphics.drawString(font, font.plainSubstrByWidth(text, detailWidth - 12), x + 12, y,
+                done ? theme.positive() : theme.textDim(), false);
+        return y + 11;
     }
 
     @Override
@@ -298,9 +357,6 @@ public class QuestJournalScreen extends Screen {
         if (button != 0) {
             return false;
         }
-        int listX = panelX + 8;
-        int listY = panelY + 34;
-        int listHeight = panelHeight - 78;
         if (mouseX < listX || mouseX >= listX + listWidth || mouseY < listY || mouseY >= listY + listHeight) {
             return false;
         }
@@ -317,9 +373,7 @@ public class QuestJournalScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int listX = panelX + 8;
-        int listY = panelY + 34;
-        if (mouseX >= listX && mouseX < listX + listWidth && mouseY >= listY && mouseY < listY + panelHeight - 78) {
+        if (mouseX >= listX && mouseX < listX + listWidth && mouseY >= listY && mouseY < listY + listHeight) {
             scroll = Math.max(0, Math.min(maxScroll(), scroll - (int) Math.round(scrollY * ROW_HEIGHT)));
             return true;
         }

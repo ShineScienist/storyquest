@@ -6,6 +6,8 @@ import com.mojang.math.Axis;
 import com.shinecreator.storyquest.client.ClientQuestCache;
 import com.shinecreator.storyquest.client.QuestWaypoints;
 import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.quest.MarkerIcon;
 import com.shinecreator.storyquest.quest.Objective;
 import com.shinecreator.storyquest.quest.Quest;
@@ -105,9 +107,11 @@ public final class WaypointHud {
         float green = ((rgb >> 8) & 0xFF) / 255.0F;
         float blue = (rgb & 0xFF) / 255.0F;
         int accent = 0xFF000000 | rgb;
-        int background = (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xB4000000;
+        QuestTheme theme = QuestTheme.current();
 
-        graphics.fill(x, y, x + width, y + HEIGHT, background);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 0.70F);
+        QuestUiRenderer.drawHudPanel(graphics, x, y, width, HEIGHT);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         graphics.fill(x, y, x + 3, y + HEIGHT, accent);
 
         if (!crossDimension) {
@@ -134,9 +138,9 @@ public final class WaypointHud {
         MarkerIcons.draw(graphics, icon, iconX, y + (HEIGHT - ICON_SIZE) / 2, ICON_SIZE, rgb, 1.0F);
 
         int textX = iconX + ICON_SIZE + GAP;
-        graphics.drawString(minecraft.font, label, textX, y + 7, 0xFFE8E8EE, true);
+        graphics.drawString(minecraft.font, label, textX, y + 7, theme.hudText(), false);
         graphics.drawString(minecraft.font, distanceText,
                 x + width - PADDING - distanceWidth, y + 7,
-                inside ? 0xFF7CD992 : 0xFFB9BECC, false);
+                inside ? theme.hudPositive() : theme.hudMuted(), false);
     }
 }

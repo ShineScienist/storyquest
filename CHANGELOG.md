@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.3.0-beta.1
+
+Interface themes: Paper and Book. This is a visual release, quest data and server logic are unchanged.
+
+- Two client themes: **Paper** (parchment with dark ink, default) and **Book** (leather cover with
+  paper pages, spine and bookmark).
+- Theme engine with 9-slice pixel-art textures: panels, insets, slots, buttons, dividers,
+  scrollbars, icons and decorations.
+- Every StoryQuest screen is reskinned: journal, quest editor, quest form, objectives, conditions,
+  marker editor, dialogue, HUD tracker and waypoint compass.
+- The journal has a theme button that cycles Paper/Book and saves the choice; the same value is
+  available in the client config (`theme`).
+- The journal layout was adjusted for the themes: chapter list, details pane, status icons,
+  requirements and objective markers.
+- All default orange accents are gone. Status colours are green (done), red (error/locked) and
+  blue-grey (information).
+- New white marker glyphs (`arrow`, `check`, `pin`, `star`).
+- Removed the `accentColor` and `panelColor` client options. Old config files keep working,
+  unknown keys are ignored.
+
 ## 1.2.0
 
 Quest prerequisites, branches and co-op.

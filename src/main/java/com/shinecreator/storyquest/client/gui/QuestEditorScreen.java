@@ -5,12 +5,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.network.QuestPayloads;
 import com.shinecreator.storyquest.quest.Quest;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -54,8 +55,10 @@ public class QuestEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(430, width - 16);
-        panelHeight = Math.min(300, height - 16);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(460, width - 16);
+        panelHeight = Math.min(310, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
         page = Math.max(0, Math.min(page, pageCount() - 1));
@@ -63,20 +66,21 @@ public class QuestEditorScreen extends Screen {
             selectedId = quests.isEmpty() ? null : quests.get(0).id;
         }
 
-        int bottom = panelY + panelHeight - 26;
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.new"), button -> newQuest())
-                .bounds(panelX + 10, bottom, 64, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.edit"), button -> editSelected())
-                .bounds(panelX + 78, bottom, 76, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.delete"), button -> deleteSelected())
-                .bounds(panelX + 158, bottom, 68, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.close"), button -> onClose())
-                .bounds(panelX + panelWidth - 74, bottom, 64, 18).build());
+        int bottom = panelY + panelHeight - padding - 18;
+        int left = panelX + padding;
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.new"),
+                button -> newQuest(), left, bottom, 64, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.edit"),
+                button -> editSelected(), left + 70, bottom, 76, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.delete"),
+                button -> deleteSelected(), left + 152, bottom, 68, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.close"),
+                button -> onClose(), panelX + panelWidth - padding - 64, bottom, 64, 18));
 
-        addRenderableWidget(Button.builder(Component.literal("\u25C0"), button -> changePage(-1))
-                .bounds(panelX + panelWidth - 58, panelY + 30, 20, 16).build());
-        addRenderableWidget(Button.builder(Component.literal("\u25B6"), button -> changePage(1))
-                .bounds(panelX + panelWidth - 34, panelY + 30, 20, 16).build());
+        addRenderableWidget(QuestButton.normal(Component.literal("\u25C0"), button -> changePage(-1),
+                panelX + panelWidth - padding - 46, panelY + 28, 20, 16));
+        addRenderableWidget(QuestButton.normal(Component.literal("\u25B6"), button -> changePage(1),
+                panelX + panelWidth - padding - 24, panelY + 28, 20, 16));
     }
 
     private void changePage(int delta) {
@@ -181,26 +185,29 @@ public class QuestEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight,
-                (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xF0101218);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 24, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 24, panelX + panelWidth, panelY + 25, accent);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
 
-        graphics.drawString(font, title, panelX + 10, panelY + 8, accent, true);
+        graphics.drawString(font, title, panelX + padding, panelY + 9, theme.text(), false);
         String pages = (page + 1) + " / " + pageCount() + "   (" + quests.size() + ")";
-        graphics.drawString(font, pages, panelX + panelWidth - 70 - font.width(pages), panelY + 8, 0xFF8A8FA0, false);
+        graphics.drawString(font, pages, panelX + panelWidth - padding - 56 - font.width(pages),
+                panelY + 9, theme.textMuted(), false);
+        QuestUiRenderer.drawDivider(graphics, panelX + padding, panelY + 24, panelWidth - padding * 2);
 
-        int listX = panelX + 10;
+        int listX = panelX + padding;
         int listY = panelY + 50;
-        int listWidth = panelWidth - 20;
+        int listWidth = panelWidth - padding * 2;
         int start = page * PAGE_SIZE;
         int end = Math.min(quests.size(), start + PAGE_SIZE);
 
+        QuestUiRenderer.drawInset(graphics, listX - 4, listY - 6, listWidth + 8, PAGE_SIZE * ROW_HEIGHT + 10);
+
         if (quests.isEmpty()) {
-            graphics.drawString(font, Component.translatable("storyquest.editor.empty"), listX + 4, listY + 8, 0xFF8A8FA0, false);
-            graphics.drawString(font, Component.translatable("storyquest.editor.empty_hint"), listX + 4, listY + 22, 0xFF6A6F80, false);
+            graphics.drawString(font, Component.translatable("storyquest.editor.empty"), listX + 4, listY + 8,
+                    theme.textMuted(), false);
+            graphics.drawString(font, Component.translatable("storyquest.editor.empty_hint"), listX + 4, listY + 22,
+                    theme.textMuted(), false);
         }
 
         for (int i = start; i < end; i++) {
@@ -209,17 +216,21 @@ public class QuestEditorScreen extends Screen {
             boolean selected = quest.id.equals(selectedId);
             boolean hovered = mouseX >= listX && mouseX < listX + listWidth && mouseY >= y && mouseY < y + ROW_HEIGHT - 2;
             if (selected) {
-                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT - 2, 0x40FFFFFF);
-                graphics.fill(listX, y, listX + 2, y + ROW_HEIGHT - 2, accent);
+                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT - 2, theme.selection());
+                graphics.fill(listX, y, listX + 3, y + ROW_HEIGHT - 2, theme.accent());
             } else if (hovered) {
-                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT - 2, 0x20FFFFFF);
+                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT - 2,
+                        QuestUiRenderer.alpha(theme.accent(), 0.14F));
             }
-            graphics.drawString(font, font.plainSubstrByWidth(quest.id, 150), listX + 8, y + 4, 0xFF8A8FA0, false);
-            graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 210), listX + 150, y + 4, 0xFFE8E8EE, false);
+            graphics.drawString(font, font.plainSubstrByWidth(quest.id, 150), listX + 8, y + 4,
+                    theme.textMuted(), false);
+            graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 210), listX + 150, y + 4,
+                    theme.text(), false);
             String meta = quest.chapter.isBlank() ? "" : quest.chapter;
             meta += "  " + Component.translatable("storyquest.editor.objectives_short", quest.objectives.size()).getString();
-            graphics.drawString(font, font.plainSubstrByWidth(meta, 120),
-                    listX + listWidth - 8 - font.width(font.plainSubstrByWidth(meta, 120)), y + 13, 0xFF6A6F80, false);
+            String metaText = font.plainSubstrByWidth(meta, 120);
+            graphics.drawString(font, metaText, listX + listWidth - 8 - font.width(metaText), y + 13,
+                    theme.textMuted(), false);
         }
 
         for (var renderable : this.renderables) {
@@ -235,9 +246,9 @@ public class QuestEditorScreen extends Screen {
         if (button != 0) {
             return false;
         }
-        int listX = panelX + 10;
+        int listX = panelX + QuestTheme.current().padding();
         int listY = panelY + 50;
-        int listWidth = panelWidth - 20;
+        int listWidth = panelWidth - QuestTheme.current().padding() * 2;
         if (mouseX < listX || mouseX >= listX + listWidth || mouseY < listY) {
             return false;
         }

@@ -19,10 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Files inherited from the NeoForge Mod Development Kit (MDK) remain under the
-license shipped in TEMPLATE_LICENSE.txt (MIT, Copyright (c) 2023 NeoForged
-project). They are build scripts, Gradle wrapper files and empty package
-directories only; all StoryQuest game code is original.

@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest a gameplay, editor or interface improvement.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check `docs/ROADMAP.md` first — the idea may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve?
+      description: Describe the map-making or player experience, not just the UI.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and workarounds
+      description: Commands, datapacks or existing features you already use.
+    validations:
+      required: false
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Area
+      options:
+        - Journal / HUD / theme
+        - Quest editor
+        - Quest logic and conditions
+        - Co-op and shared progress
+        - JSON export / import
+        - Commands
+        - Documentation
+    validations:
+      required: true

@@ -5,12 +5,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestEditBox;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.quest.Quest;
 import com.shinecreator.storyquest.quest.QuestConditions;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -50,9 +52,9 @@ public class QuestConditionsScreen extends Screen {
     private String search = "";
     private EditBox searchBox;
     private EditBox branchBox;
-    private Button modeButton;
-    private Button hideButton;
-    private Button scopeButton;
+    private QuestButton modeButton;
+    private QuestButton hideButton;
+    private QuestButton scopeButton;
     private Component error;
 
     public QuestConditionsScreen(QuestFormScreen parent, Quest quest) {
@@ -71,15 +73,17 @@ public class QuestConditionsScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(540, width - 16);
-        panelHeight = Math.min(300, height - 16);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(560, width - 16);
+        panelHeight = Math.min(310, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
-        contentX = panelX + 14;
-        contentWidth = panelWidth - 28;
-        contentY = panelY + 36;
+        contentX = panelX + padding;
+        contentWidth = panelWidth - padding * 2;
+        contentY = panelY + 38;
 
-        int bottom = panelY + panelHeight - 26;
+        int bottom = panelY + panelHeight - padding - 18;
         contentBottom = bottom - 6;
         int gap = 12;
         listWidth = Math.max(150, Math.min(260, contentWidth * 55 / 100));
@@ -93,7 +97,7 @@ public class QuestConditionsScreen extends Screen {
         labels.add(new Label(rightX, contentY + 64, Component.translatable("storyquest.editor.conditions.scope")));
         labels.add(new Label(rightX, contentY + 96, Component.translatable("storyquest.editor.conditions.branch")));
 
-        searchBox = new EditBox(font, contentX, contentY + 13, listWidth, 18, Component.empty());
+        searchBox = new QuestEditBox(font, contentX + 4, contentY + 13, listWidth - 8, 18);
         searchBox.setMaxLength(64);
         searchBox.setValue(search);
         searchBox.setResponder(value -> {
@@ -102,34 +106,33 @@ public class QuestConditionsScreen extends Screen {
         });
         addRenderableWidget(searchBox);
 
-        modeButton = addRenderableWidget(Button.builder(modeLabel(), button -> {
+        modeButton = addRenderableWidget(QuestButton.normal(modeLabel(), button -> {
             draft.requireAll = !draft.requireAll;
             button.setMessage(modeLabel());
-        }).bounds(rightX, contentY + 13, rightWidth, 18).build());
+        }, rightX, contentY + 13, rightWidth, 18));
 
-        hideButton = addRenderableWidget(Button.builder(hideLabel(), button -> {
+        hideButton = addRenderableWidget(QuestButton.normal(hideLabel(), button -> {
             draft.hideUntilAvailable = !draft.hideUntilAvailable;
             button.setMessage(hideLabel());
-        }).bounds(rightX, contentY + 44, rightWidth, 18).build());
+        }, rightX, contentY + 44, rightWidth, 18));
 
-        scopeButton = addRenderableWidget(Button.builder(scopeLabel(), button -> {
+        scopeButton = addRenderableWidget(QuestButton.normal(scopeLabel(), button -> {
             draft.scope = draft.scope == Quest.Scope.SHARED ? Quest.Scope.SOLO : Quest.Scope.SHARED;
             button.setMessage(scopeLabel());
-        }).bounds(rightX, contentY + 76, rightWidth, 18).build());
+        }, rightX, contentY + 76, rightWidth, 18));
 
-        branchBox = new EditBox(font, rightX, contentY + 108, rightWidth, 18, Component.empty());
+        branchBox = new QuestEditBox(font, rightX + 4, contentY + 108, rightWidth - 8, 18);
         branchBox.setMaxLength(64);
         branchBox.setValue(draft.branch == null ? "" : draft.branch);
         branchBox.setResponder(value -> draft.branch = value == null ? "" : value);
         addRenderableWidget(branchBox);
 
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.editor.conditions.clear"),
-                button -> draft.requiredQuests.clear())
-                .bounds(contentX, bottom, 88, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.done"), button -> done())
-                .bounds(panelX + panelWidth - 14 - 70, bottom, 70, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.cancel"), button -> cancel())
-                .bounds(panelX + panelWidth - 14 - 70 - 76, bottom, 70, 18).build());
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.editor.conditions.clear"),
+                button -> draft.requiredQuests.clear(), contentX, bottom, 88, 18));
+        addRenderableWidget(QuestButton.primary(Component.translatable("storyquest.button.done"),
+                button -> done(), panelX + panelWidth - padding - 70, bottom, 70, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.cancel"),
+                button -> cancel(), panelX + panelWidth - padding - 70 - 6 - 70, bottom, 70, 18));
 
         listY = contentY + 38;
         listX = contentX;
@@ -208,32 +211,30 @@ public class QuestConditionsScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight,
-                (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xF0101218);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 24, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 24, panelX + panelWidth, panelY + 25, accent);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
+        QuestUiRenderer.drawDivider(graphics, panelX + padding, panelY + 28, panelWidth - padding * 2);
 
-        graphics.drawString(font, title, panelX + 10, panelY + 8, accent, true);
+        graphics.drawString(font, title, panelX + padding, panelY + 9, theme.text(), false);
         Component warning = conditionWarning();
         if (warning != null) {
-            graphics.drawString(font, font.plainSubstrByWidth(warning.getString(), panelWidth - 180),
-                    panelX + 160, panelY + 8, 0xFFFFB86B, false);
+            graphics.drawString(font, font.plainSubstrByWidth(warning.getString(), panelWidth - 200),
+                    panelX + 180, panelY + 9, theme.warning(), false);
         }
         if (error != null) {
             graphics.drawString(font, font.plainSubstrByWidth(error.getString(), panelWidth - 24),
-                    panelX + 12, panelY + panelHeight - 40, 0xFFFF6B6B, false);
+                    panelX + 12, panelY + panelHeight - 42, theme.negative(), false);
         }
 
         for (Label label : labels) {
-            graphics.drawString(font, label.text(), label.x(), label.y(), 0xFFA8ADBC, false);
+            graphics.drawString(font, label.text(), label.x(), label.y(), theme.textDim(), false);
         }
 
         String selected = Component.translatable("storyquest.editor.conditions.selected",
                 draft.requiredQuests.size()).getString();
         graphics.drawString(font, selected, contentX + listWidth - font.width(selected),
-                contentY, 0xFF6A6F80, false);
+                contentY, theme.textMuted(), false);
 
         drawList(graphics, mouseX, mouseY);
         drawHint(graphics);
@@ -243,12 +244,13 @@ public class QuestConditionsScreen extends Screen {
     }
 
     private void drawList(GuiGraphics graphics, int mouseX, int mouseY) {
+        QuestTheme theme = QuestTheme.current();
         List<Row> rows = rows();
         int visibleRows = Math.max(1, listHeight / ROW_HEIGHT);
         int maxScroll = Math.max(0, rows.size() - visibleRows);
         scroll = Math.max(0, Math.min(scroll, maxScroll));
 
-        graphics.fill(listX, listY, listX + listWidth, listY + listHeight, 0x40000000);
+        QuestUiRenderer.drawInset(graphics, listX - 3, listY - 3, listWidth + 6, listHeight + 6);
         graphics.enableScissor(listX, listY, listX + listWidth, listY + listHeight);
         for (int i = 0; i < visibleRows; i++) {
             int index = scroll + i;
@@ -261,17 +263,20 @@ public class QuestConditionsScreen extends Screen {
                     && mouseY >= y && mouseY < y + ROW_HEIGHT;
             boolean checked = draft.requiredQuests.contains(row.id());
             if (hovered) {
-                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT, 0x20FFFFFF);
+                graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT,
+                        QuestUiRenderer.alpha(theme.accent(), 0.14F));
             }
-            String prefix = checked ? "[\u2714] " : "[  ] ";
-            String text = prefix + row.title();
-            graphics.drawString(font, font.plainSubstrByWidth(text, listWidth - 8),
-                    listX + 4, y + 6, row.missing() ? 0xFFFF6B6B : 0xFFD8D8DE, false);
+            QuestUiRenderer.drawCheckbox(graphics, listX + 4, y + 5, checked);
+            graphics.drawString(font, font.plainSubstrByWidth(row.title(), listWidth - 28),
+                    listX + 20, y + 6, row.missing() ? theme.negative() : theme.text(), false);
         }
         graphics.disableScissor();
+        QuestUiRenderer.drawScrollbar(graphics, listX + listWidth - 7, listY + 2, listHeight - 4,
+                scroll, maxScroll, visibleRows * ROW_HEIGHT);
     }
 
     private void drawHint(GuiGraphics graphics) {
+        QuestTheme theme = QuestTheme.current();
         int y = contentY + 134;
         List<FormattedCharSequence> lines = font.split(
                 Component.translatable("storyquest.editor.conditions.hint"), rightWidth);
@@ -279,7 +284,7 @@ public class QuestConditionsScreen extends Screen {
             if (y > contentBottom - 10) {
                 break;
             }
-            graphics.drawString(font, line, rightX, y, 0xFF6A6F80, false);
+            graphics.drawString(font, line, rightX, y, theme.textMuted(), false);
             y += 10;
         }
     }

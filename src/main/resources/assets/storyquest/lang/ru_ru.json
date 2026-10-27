@@ -2,7 +2,6 @@
   "key.categories.storyquest": "StoryQuest",
   "key.storyquest.journal": "Открыть журнал квестов",
   "key.storyquest.editor": "Открыть редактор квестов (оператор)",
-
   "storyquest.journal.title": "Журнал квестов",
   "storyquest.journal.no_chapter": "Без главы",
   "storyquest.journal.objectives": "Цели",
@@ -21,7 +20,6 @@
   "storyquest.journal.branch_chosen": "Выбрана ветка: %s",
   "storyquest.journal.empty": "Квестов пока нет.",
   "storyquest.journal.empty_hint": "Автор карты может создать их в редакторе (K).",
-
   "storyquest.button.close": "Закрыть",
   "storyquest.button.save": "Сохранить",
   "storyquest.button.cancel": "Отмена",
@@ -33,10 +31,8 @@
   "storyquest.button.next": "Далее",
   "storyquest.button.ok": "Готово",
   "storyquest.button.done": "Готово",
-
   "storyquest.objective.type.manual": "Вручную",
   "storyquest.objective.type.visit": "Посещение",
-
   "storyquest.editor.title": "Редактор квестов",
   "storyquest.editor.form_title": "Квест: %s",
   "storyquest.editor.objective_title": "Цель",
@@ -108,7 +104,6 @@
   "storyquest.editor.conditions.summary_shared": "Общий",
   "storyquest.editor.conditions.summary_branch": "Ветка: %s",
   "storyquest.editor.conditions.summary_none": "Без условий",
-
   "storyquest.marker.title": "Метка цели",
   "storyquest.marker.show": "Показывать метку",
   "storyquest.marker.beam": "Луч в мире",
@@ -121,11 +116,9 @@
   "storyquest.marker.icon.check": "Галочка",
   "storyquest.marker.icon.pin": "Булавка",
   "storyquest.marker.icon.star": "Звезда",
-
   "storyquest.waypoint.distance": "%s м",
   "storyquest.waypoint.other_dimension": "другой мир",
   "storyquest.waypoint.here": "вы на месте",
-
   "storyquest.command.started": "Квест начат: %1$s (игроков: %2$s)",
   "storyquest.command.completed": "Квест завершён: %1$s (игроков: %2$s)",
   "storyquest.command.objective_done": "Цель выполнена: %1$s (игроков: %2$s)",
@@ -149,7 +142,6 @@
   "storyquest.command.dialogue": "Диалог отправлен (игроков: %2$s)",
   "storyquest.command.no_targets": "Для выбранных игроков ничего не изменилось.",
   "storyquest.command.no_quests": "В этом мире пока нет квестов.",
-
   "storyquest.message.quest_started": "Новый квест: %s",
   "storyquest.message.quest_completed": "Квест завершён: %s",
   "storyquest.message.objective_completed": "Цель выполнена: %s",
@@ -163,7 +155,6 @@
   "storyquest.message.invalid_id": "Некорректный id. Используйте только a-z, 0-9 и _.",
   "storyquest.message.duplicate_id": "Квест с id «%s» уже существует.",
   "storyquest.message.no_permission": "Для этого нужны права оператора.",
-
   "storyquest.configuration.title": "Настройки StoryQuest",
   "storyquest.configuration.section.storyquest.common.toml": "Игровой процесс",
   "storyquest.configuration.section.storyquest.common.toml.title": "Игровой процесс",
@@ -171,7 +162,6 @@
   "storyquest.configuration.showChatMessages": "Показывать сообщения о квестах",
   "storyquest.configuration.playSounds": "Проигрывать звуки квестов",
   "storyquest.configuration.allowManualStartFromJournal": "Разрешить принимать квесты из журнала",
-
   "storyquest.configuration.section.storyquest.client.toml": "Интерфейс",
   "storyquest.configuration.section.storyquest.client.toml.title": "Интерфейс",
   "storyquest.configuration.showHud": "Показывать трекер квестов",
@@ -193,6 +183,9 @@
   "storyquest.configuration.waypointBeamHeight": "Высота луча",
   "storyquest.configuration.waypointMaxDistance": "Дальность отображения меток",
   "storyquest.configuration.waypointIconScale": "Размер иконок меток",
-  "storyquest.configuration.accentColor": "Акцентный цвет (#RRGGBB)",
-  "storyquest.configuration.panelColor": "Цвет панелей (#RRGGBB)"
+  "storyquest.journal.quest_count": "Квестов: %s",
+  "storyquest.journal.theme": "Тема: %s",
+  "storyquest.theme.paper": "Пергамент",
+  "storyquest.theme.book": "Книга",
+  "storyquest.configuration.theme": "Тема интерфейса"
 }

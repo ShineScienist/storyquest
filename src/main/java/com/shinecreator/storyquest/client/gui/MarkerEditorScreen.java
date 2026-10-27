@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestEditBox;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.quest.Objective;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -53,14 +55,16 @@ public class MarkerEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(420, width - 16);
-        panelHeight = Math.min(214, height - 16);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(440, width - 16);
+        panelHeight = Math.min(228, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
-        contentX = panelX + 16;
+        contentX = panelX + padding;
         contentY = panelY + 38;
-        contentWidth = panelWidth - 32;
-        contentBottom = panelY + panelHeight - 26;
+        contentWidth = panelWidth - padding * 2;
+        contentBottom = panelY + panelHeight - padding - 18;
 
         labels.clear();
         swatches.clear();
@@ -93,10 +97,10 @@ public class MarkerEditorScreen extends Screen {
         y += 24;
 
         labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.marker.icon")));
-        addRenderableWidget(Button.builder(Component.translatable(draft.markerIcon.translationKey()), button -> {
+        addRenderableWidget(QuestButton.normal(Component.translatable(draft.markerIcon.translationKey()), button -> {
             draft.markerIcon = draft.markerIcon.next();
             button.setMessage(Component.translatable(draft.markerIcon.translationKey()));
-        }).bounds(contentX + 96, y, 120, 18).build());
+        }, contentX + 96, y, 120, 18));
         previewX = contentX + 96 + 126;
         previewY = y + 1;
         y += 24;
@@ -105,18 +109,18 @@ public class MarkerEditorScreen extends Screen {
             labels.add(new Label(contentX, y, Component.translatable("storyquest.marker.hint")));
         }
 
-        int bottom = panelY + panelHeight - 26;
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.ok"), button -> confirm())
-                .bounds(panelX + panelWidth - 16 - 70, bottom, 70, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.cancel"), button -> cancel())
-                .bounds(panelX + panelWidth - 16 - 70 - 80, bottom, 76, 18).build());
+        int bottom = panelY + panelHeight - padding - 18;
+        addRenderableWidget(QuestButton.primary(Component.translatable("storyquest.button.ok"),
+                button -> confirm(), panelX + panelWidth - padding - 70, bottom, 70, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.cancel"),
+                button -> cancel(), panelX + panelWidth - padding - 70 - 6 - 76, bottom, 76, 18));
     }
 
     private void addFlagButton(int x, int y, int width, String key, BooleanSupplier getter, Runnable toggler) {
-        Button button = Button.builder(flagLabel(key, getter.getAsBoolean()), widget -> {
+        QuestButton button = QuestButton.normal(flagLabel(key, getter.getAsBoolean()), widget -> {
             toggler.run();
             widget.setMessage(flagLabel(key, getter.getAsBoolean()));
-        }).bounds(x, y, width, 18).build();
+        }, x, y, width, 18);
         addRenderableWidget(button);
     }
 
@@ -125,7 +129,7 @@ public class MarkerEditorScreen extends Screen {
     }
 
     private EditBox addEditBox(int x, int y, int width, String value, int maxLength) {
-        EditBox box = new EditBox(font, x, y, width, 18, Component.empty());
+        QuestEditBox box = new QuestEditBox(font, x, y, width, 18);
         box.setMaxLength(maxLength);
         box.setValue(value == null ? "" : value);
         addRenderableWidget(box);
@@ -177,27 +181,25 @@ public class MarkerEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight,
-                (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xF0101218);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 30, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 30, panelX + panelWidth, panelY + 31, accent);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
+        QuestUiRenderer.drawDivider(graphics, contentX, panelY + 30, contentWidth);
 
         graphics.drawString(font, Component.translatable("storyquest.marker.title"),
-                contentX, panelY + 9, accent, true);
+                contentX, panelY + 9, theme.text(), false);
         if (error != null) {
             graphics.drawString(font, error, contentX + contentWidth - font.width(error),
-                    panelY + 9, 0xFFFF6B6B, false);
+                    panelY + 9, theme.negative(), false);
         }
 
         for (Label label : labels) {
-            graphics.drawString(font, label.text(), label.x(), label.y(), 0xFFA8ADBC, false);
+            graphics.drawString(font, label.text(), label.x(), label.y(), theme.textDim(), false);
         }
 
         int previewColor = previewColor();
         for (int[] swatch : swatches) {
-            graphics.fill(swatch[0] - 1, swatch[1] - 1, swatch[0] + 15, swatch[1] + 15, 0xFF3A3D48);
+            QuestUiRenderer.drawSlot(graphics, swatch[0] - 2, swatch[1] - 2, 18, 18);
             graphics.fill(swatch[0], swatch[1], swatch[0] + 14, swatch[1] + 14, 0xFF000000 | swatch[2]);
         }
         MarkerIcons.draw(graphics, draft.markerIcon, previewX, previewY, 16, previewColor, 1.0F);

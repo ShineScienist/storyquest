@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestEditBox;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 import com.shinecreator.storyquest.quest.MarkerIcon;
 import com.shinecreator.storyquest.quest.Objective;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -53,13 +55,15 @@ public class ObjectiveEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(400, width - 16);
-        panelHeight = Math.min(270, height - 16);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(430, width - 16);
+        panelHeight = Math.min(286, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
-        contentX = panelX + 16;
+        contentX = panelX + padding;
         contentY = panelY + 38;
-        contentWidth = panelWidth - 32;
+        contentWidth = panelWidth - padding * 2;
 
         labels.clear();
         textBox = null;
@@ -71,11 +75,11 @@ public class ObjectiveEditorScreen extends Screen {
         markerSummaryX = -1;
 
         int y = contentY;
-        addRenderableWidget(Button.builder(typeLabel(), button -> {
+        addRenderableWidget(QuestButton.normal(typeLabel(), button -> {
             captureFields();
             draft.type = draft.type == Objective.Type.VISIT ? Objective.Type.MANUAL : Objective.Type.VISIT;
             rebuildWidgets();
-        }).bounds(contentX, y, 150, 18).build());
+        }, contentX, y, 150, 18));
         y += 26;
 
         labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.objective_text")));
@@ -96,20 +100,18 @@ public class ObjectiveEditorScreen extends Screen {
 
             labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.radius")));
             radiusBox = addEditBox(contentX + 96, y, 60, format(draft.radius), 10);
-            addRenderableWidget(Button.builder(Component.translatable("storyquest.editor.my_position"),
-                    button -> useMyPosition())
-                    .bounds(contentX + 164, y, 120, 18).build());
+            addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.editor.my_position"),
+                    button -> useMyPosition(), contentX + 164, y, 120, 18));
             y += 26;
 
             labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.marker")));
-            addRenderableWidget(Button.builder(Component.translatable("storyquest.editor.marker_button"),
-                    button -> openMarkerEditor())
-                    .bounds(contentX + 96, y, 120, 18).build());
+            addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.editor.marker_button"),
+                    button -> openMarkerEditor(), contentX + 96, y, 120, 18));
             markerSummaryX = contentX + 96 + 126;
             markerSummaryY = y + 3;
             y += 26;
 
-            int bottom = panelY + panelHeight - 26;
+            int bottom = panelY + panelHeight - theme.padding() - 26;
             if (y + 10 < bottom) {
                 labels.add(new Label(contentX, y, Component.translatable("storyquest.editor.hint.visit")));
             }
@@ -117,15 +119,15 @@ public class ObjectiveEditorScreen extends Screen {
             labels.add(new Label(contentX, y, Component.translatable("storyquest.editor.hint.manual")));
         }
 
-        int bottom = panelY + panelHeight - 26;
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.ok"), button -> confirm())
-                .bounds(panelX + panelWidth - 16 - 70, bottom, 70, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.cancel"), button -> cancel())
-                .bounds(panelX + panelWidth - 16 - 70 - 80, bottom, 76, 18).build());
+        int bottom = panelY + panelHeight - theme.padding() - 18;
+        addRenderableWidget(QuestButton.primary(Component.translatable("storyquest.button.ok"),
+                button -> confirm(), panelX + panelWidth - theme.padding() - 70, bottom, 70, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.cancel"),
+                button -> cancel(), panelX + panelWidth - theme.padding() - 70 - 6 - 76, bottom, 76, 18));
     }
 
     private EditBox addEditBox(int x, int y, int width, String value, int maxLength) {
-        EditBox box = new EditBox(font, x, y, width, 18, Component.empty());
+        QuestEditBox box = new QuestEditBox(font, x, y, width, 18);
         box.setMaxLength(maxLength);
         box.setValue(value == null ? "" : value);
         addRenderableWidget(box);
@@ -217,26 +219,24 @@ public class ObjectiveEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight,
-                (StoryQuestClientConfig.panelColor() & 0x00FFFFFF) | 0xF0101218);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 30, 0x30FFFFFF);
-        graphics.fill(panelX, panelY + 30, panelX + panelWidth, panelY + 31, accent);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
+        QuestUiRenderer.drawDivider(graphics, contentX, panelY + 30, contentWidth);
 
         Component header = isNew
                 ? Component.translatable("storyquest.editor.new_objective_title")
                 : Component.translatable("storyquest.editor.objective_title_number", index + 1);
-        graphics.drawString(font, header, contentX, panelY + 9, accent, true);
+        graphics.drawString(font, header, contentX, panelY + 9, theme.text(), false);
 
         for (Label label : labels) {
-            graphics.drawString(font, label.text(), label.x(), label.y(), 0xFFA8ADBC, false);
+            graphics.drawString(font, label.text(), label.x(), label.y(), theme.textDim(), false);
         }
 
         if (draft.type == Objective.Type.VISIT && markerSummaryX >= 0) {
             if (!draft.markerVisible) {
                 graphics.drawString(font, Component.translatable("storyquest.editor.marker_hidden"),
-                        markerSummaryX, markerSummaryY, 0xFF6A6F80, false);
+                        markerSummaryX, markerSummaryY, theme.textMuted(), false);
             } else {
                 MarkerIcon icon = draft.markerIcon == null ? MarkerIcon.CHECK : draft.markerIcon;
                 MarkerIcons.draw(graphics, icon, markerSummaryX, markerSummaryY - 4, 16,
@@ -245,7 +245,7 @@ public class ObjectiveEditorScreen extends Screen {
                 int maxWidth = Math.max(30, contentX + contentWidth - (markerSummaryX + 20));
                 summary = font.plainSubstrByWidth(summary, maxWidth);
                 graphics.drawString(font, summary, markerSummaryX + 20, markerSummaryY,
-                        0xFFA8ADBC, false);
+                        theme.textDim(), false);
             }
         }
 

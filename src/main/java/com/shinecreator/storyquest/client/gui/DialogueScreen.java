@@ -3,11 +3,12 @@ package com.shinecreator.storyquest.client.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.shinecreator.storyquest.client.StoryQuestClientConfig;
+import com.shinecreator.storyquest.client.gui.theme.QuestButton;
+import com.shinecreator.storyquest.client.gui.theme.QuestTheme;
+import com.shinecreator.storyquest.client.gui.theme.QuestUiRenderer;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -27,7 +28,7 @@ public class DialogueScreen extends Screen {
     private int panelY;
     private int panelWidth;
     private int panelHeight;
-    private Button nextButton;
+    private QuestButton nextButton;
 
     public DialogueScreen(String title, String speaker, String text) {
         super(Component.literal(title == null ? "" : title));
@@ -38,13 +39,15 @@ public class DialogueScreen extends Screen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(400, width - 30);
-        panelHeight = Math.min(240, height - 30);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        panelWidth = Math.min(420, width - 30);
+        panelHeight = Math.min(250, height - 30);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
 
         pages.clear();
-        int textWidth = panelWidth - 32;
+        int textWidth = panelWidth - padding * 2 - 4;
         int maxLines = Math.max(4, (panelHeight - 92) / 11);
         for (String pageText : rawText.split("\\|")) {
             String trimmed = pageText.trim();
@@ -61,43 +64,41 @@ public class DialogueScreen extends Screen {
         }
         page = Math.min(page, pages.size() - 1);
 
-        int buttonY = panelY + panelHeight - 26;
-        nextButton = addRenderableWidget(Button.builder(Component.translatable("storyquest.button.next"), button -> advance())
-                .bounds(panelX + 14, buttonY, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.translatable("storyquest.button.close"), button -> onClose())
-                .bounds(panelX + panelWidth - 94, buttonY, 80, 18).build());
+        int buttonY = panelY + panelHeight - padding - 18;
+        nextButton = addRenderableWidget(QuestButton.primary(Component.translatable("storyquest.button.next"),
+                button -> advance(), panelX + padding, buttonY, 80, 18));
+        addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.button.close"),
+                button -> onClose(), panelX + panelWidth - padding - 80, buttonY, 80, 18));
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
-        int accent = StoryQuestClientConfig.accentColor();
-        int panel = 0xE8101218;
-
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelY + panelHeight + 1, accent);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, panel);
+        QuestTheme theme = QuestTheme.current();
+        int padding = theme.padding();
+        QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
 
         if (!title.isBlank()) {
-            graphics.drawString(font, Component.literal(title), panelX + 16, panelY + 10, 0xFF9AA0B4, false);
+            graphics.drawString(font, Component.literal(title), panelX + padding, panelY + 10,
+                    theme.textMuted(), false);
         }
         if (!speaker.isBlank()) {
             graphics.drawString(font, Component.literal(speaker).withStyle(ChatFormatting.BOLD),
-                    panelX + 16, panelY + 26, accent, false);
+                    panelX + padding, panelY + 26, theme.accent(), false);
         }
-        graphics.fill(panelX + 14, panelY + 41, panelX + panelWidth - 14, panelY + 42,
-                (accent & 0x00FFFFFF) | 0x60000000);
+        QuestUiRenderer.drawDivider(graphics, panelX + padding, panelY + 41, panelWidth - padding * 2);
 
         int textY = panelY + 52;
         List<FormattedCharSequence> lines = pages.get(page);
         for (FormattedCharSequence line : lines) {
-            graphics.drawString(font, line, panelX + 16, textY, 0xFFE8E8EE, false);
+            graphics.drawString(font, line, panelX + padding, textY, theme.textDim(), false);
             textY += 11;
         }
 
         if (pages.size() > 1) {
             String indicator = (page + 1) + " / " + pages.size();
-            graphics.drawString(font, indicator, panelX + panelWidth - 16 - font.width(indicator),
-                    panelY + panelHeight - 36, 0xFF7C8090, false);
+            graphics.drawString(font, indicator, panelX + panelWidth - padding - font.width(indicator),
+                    panelY + panelHeight - padding - 26, theme.textMuted(), false);
         }
 
         nextButton.visible = page < pages.size() - 1;
