@@ -391,7 +391,6 @@ MIT — см. [LICENSE](LICENSE). Мод можно свободно испол�
 Сторонние файлы и лицензия NeoForge MDK: [NOTICE.md](NOTICE.md) и
 [TEMPLATE_LICENSE.txt](TEMPLATE_LICENSE.txt).
 
-Готовые тексты и инструкция для публикации на CurseForge/Modrinth: [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 ---
 
