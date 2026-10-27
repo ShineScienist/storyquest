@@ -41,15 +41,15 @@ gradlew build
 5. **Icon** — загрузи `src\main\resources\storyquest.png`.
 6. **Environment** — *Client and server*.
 7. **License** — *MIT License*.
-8. **Links** — пока пусто (Source/Issues можно добавить позже).
+8. **Links** — Source: `https://github.com/ShineScienist/storyquest`, Issues: `https://github.com/ShineScienist/storyquest/issues`.
 9. **Tags** — `adventure`, `management`, `utility`, `game-mechanics`; загрузчик `NeoForge`, версия игры `1.21.1`.
 10. Вкладка **Versions** → **Create version**:
-    - Version number: `1.2.0`
-    - Channel: `Release`
+    - Version number: `1.3.0-beta.2`
+    - Channel: `Beta`
     - Loaders: `NeoForge`
     - Game version: `1.21.1`
-    - File: `storyquest-1.2.0.jar`
-    - Changelog: текст из раздела «Changelog 1.2.0».
+    - File: `storyquest-1.3.0-beta.2.jar`
+    - Changelog: текст из раздела «Changelog 1.3.0-beta.2».
 
 ---
 
@@ -70,10 +70,10 @@ gradlew build
 7. **License:** MIT (поле `License` в настройках проекта).
 8. **Avatar:** `src\main\resources\storyquest.png`.
 9. Вкладка **Files** → **Upload File**:
-    - File: `storyquest-1.2.0.jar`
-    - Release type: `Release`
+    - File: `storyquest-1.3.0-beta.2.jar`
+    - Release type: `Beta`
     - Game version: `1.21.1`, loader `NeoForge`
-    - Changelog: текст из раздела «Changelog 1.2.0».
+    - Changelog: текст из раздела «Changelog 1.3.0-beta.2».
 
 > Зависимости указывать не нужно: требуется только NeoForge, он есть у всех, кто ставит моды на 1.21.1.
 
@@ -94,6 +94,9 @@ and scripted events.
 
 - **In-game quest editor** (`K`, operators only) — tabs for main info, story text, objectives and scripts.
 - **Quest journal** (`J`) — chapters, descriptions, objective status, accept and track buttons.
+- **Two interface themes** — **Paper** (parchment with dark ink, default) and **Book**
+  (leather cover with paper pages, spine and bookmark). Switch them with the button in the
+  journal header or in the client config; no restart needed.
 - **HUD tracker** — shows the tracked quest and its objectives; corner, offsets, scale, opacity and colors
   are configurable on the client.
 - **Dialogues** — a narrator line and paginated text (pages split by `|`) on quest start and completion,
@@ -175,9 +178,9 @@ Works in single player and on dedicated servers. No other mods required.
 ## Notes
 
 - One tracked quest at a time (several quests can be active).
-- No branching dialogue trees - branch with conditions and commands. They are planned for 1.3.0.
+- No branching dialogue trees - branch with conditions and commands. They are planned for 1.4.0.
 - Item/kill objectives are done with commands plus `/storyquest objective complete`.
-- Co-op in 1.2.0 uses one shared world progress. Separate parties are planned for 1.3.0.
+- Co-op in 1.2.0+ uses one shared world progress. Separate parties are planned for 1.4.0.
 - JSON export/import is command-based; editor buttons are not included yet.
 - MIT license.
 ```
@@ -198,6 +201,9 @@ RP-серверов и сюжетных кампаний. Вместо «при�
 
 - **Редактор квестов в игре** (`K`, только для операторов): вкладки «Основное», «Текст», «Цели», «Скрипты».
 - **Журнал квестов** (`J`): главы, описания, статус целей, кнопки «Принять» и «Отслеживать».
+- **Две темы интерфейса** — **Paper** (пергамент с тёмными чернилами, по умолчанию) и **Book**
+  (кожаный переплёт с бумажными страницами, корешком и закладкой). Переключаются кнопкой в шапке
+  журнала или в настройках клиента, без перезапуска игры.
 - **HUD-трекер**: активный квест и его цели; угол, смещение, масштаб, прозрачность и цвета настраиваются на клиенте.
 - **Диалоги**: имя рассказчика и постраничный текст (страницы разделяются `|`) при старте и завершении квеста
   или по команде.
@@ -277,14 +283,37 @@ RP-серверов и сюжетных кампаний. Вместо «при�
 ## Примечания
 
 - Отслеживается один квест за раз (активными могут быть несколько).
-- Дерева диалогов с выборами нет — ветвление делается условиями и командами. Оно запланировано на 1.3.0.
+- Дерева диалогов с выборами нет — ветвление делается условиями и командами. Оно запланировано на 1.4.0.
 - Цели «принести предмет» / «убить моба» делаются командами и `/storyquest objective complete`.
-- Кооп в 1.2.0 — один общий прогресс на мир. Отдельные пати запланированы на 1.3.0.
+- Кооп в 1.2.0+ — один общий прогресс на мир. Отдельные пати запланированы на 1.4.0.
 - Экспорт и импорт JSON доступны командами; кнопок в редакторе пока нет.
 - Лицензия MIT.
 ```
 
 ---
+
+## Changelog 1.3.0-beta.2
+
+```markdown
+Interface themes: Paper and Book. This is a visual release; quest data and server logic are unchanged.
+
+- Two client themes: Paper (parchment with dark ink, default) and Book (leather cover with paper
+  pages, spine and bookmark).
+- Theme engine with 9-slice pixel-art textures: panels, insets, slots, buttons, dividers,
+  scrollbars and icons.
+- Every screen is reskinned: journal, quest editor, quest form, objectives, conditions, marker
+  editor, dialogue, HUD tracker and waypoint compass.
+- The journal theme button cycles Paper/Book and saves the choice; the same option is in the
+  client config ("Interface theme").
+- Soft ink palette without drop shadows, readable on both parchment and book pages.
+- White marker glyphs (arrow, check, pin, star).
+- Removed the "accentColor" and "panelColor" client options; old config files keep working.
+
+Fixed since beta.1:
+- Five Russian theme strings shipped as "???" and are now correct (quest counter, journal theme
+  label, theme names, config option name).
+- Title and button text is no longer doubled by drop shadows.
+```
 
 ## Changelog 1.2.0
 
@@ -350,6 +379,8 @@ First release.
 - [ ] В `build\libs` лежит свежий `storyquest-<version>.jar`.
 - [ ] Версия в `gradle.properties` (`mod_version`) совпадает с версией в описании.
 - [ ] В игре проверены: редактор, журнал, HUD, диалог, цель «Посещение», команды старта/финиша.
+- [ ] Проверены обе темы: переключение кнопкой в журнале, сохранение выбора после перезапуска.
+- [ ] Текст читаем в Paper и Book, без теней; в журнале и в конфиге нет «???».
 - [ ] Проверены условия, ветки, скрытые квесты, `force-start` и сброс прогресса.
 - [ ] Проверены общие квесты в коопе: старт одним игроком, цель другим, поздний вход и `reset-shared`.
 - [ ] Проверены экспорт/импорт JSON, merge/replace и резервные копии.
