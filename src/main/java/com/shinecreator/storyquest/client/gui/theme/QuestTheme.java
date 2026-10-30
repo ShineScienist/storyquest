@@ -156,6 +156,14 @@ public enum QuestTheme implements TranslatableEnum {
         return page;
     }
 
+    /**
+     * Distance from the panel edge to the usable inner page. Book themes draw a
+     * leather cover with an inner page, so their content starts a little lower.
+     */
+    public int pageInset() {
+        return bookStyle ? 6 : 0;
+    }
+
     public Slice inset() {
         return inset;
     }

@@ -222,15 +222,21 @@ public class QuestEditorScreen extends Screen {
                 graphics.fill(listX, y, listX + listWidth, y + ROW_HEIGHT - 2,
                         QuestUiRenderer.alpha(theme.accent(), 0.14F));
             }
-            graphics.drawString(font, font.plainSubstrByWidth(quest.id, 150), listX + 8, y + 4,
+            graphics.drawString(font, QuestUiRenderer.fitText(font, quest.id, 140), listX + 8, y + 4,
                     theme.textMuted(), false);
-            graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 210), listX + 150, y + 4,
-                    theme.text(), false);
-            String meta = quest.chapter.isBlank() ? "" : quest.chapter;
-            meta += "  " + Component.translatable("storyquest.editor.objectives_short", quest.objectives.size()).getString();
-            String metaText = font.plainSubstrByWidth(meta, 120);
-            graphics.drawString(font, metaText, listX + listWidth - 8 - font.width(metaText), y + 13,
+            graphics.drawString(font, QuestUiRenderer.fitText(font, quest.title, listWidth - 158),
+                    listX + 150, y + 4, theme.text(), false);
+            String objectives = Component.translatable("storyquest.editor.objectives_short",
+                    quest.objectives.size()).getString();
+            int metaRight = listX + listWidth - 8;
+            graphics.drawString(font, objectives, metaRight - font.width(objectives), y + 13,
                     theme.textMuted(), false);
+            if (!quest.chapter.isBlank()) {
+                int chapterWidth = Math.max(0,
+                        metaRight - font.width(objectives) - 8 - (listX + 150));
+                graphics.drawString(font, QuestUiRenderer.fitText(font, quest.chapter, chapterWidth),
+                        listX + 150, y + 13, theme.textMuted(), false);
+            }
         }
 
         for (var renderable : this.renderables) {

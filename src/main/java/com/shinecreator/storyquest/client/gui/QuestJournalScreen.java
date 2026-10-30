@@ -58,9 +58,9 @@ public class QuestJournalScreen extends Screen {
         panelY = (height - panelHeight) / 2;
         bottom = panelY + panelHeight - padding - 18;
 
-        listWidth = Math.max(140, Math.min(190, panelWidth / 3));
+        listWidth = Math.max(140, Math.min(196, panelWidth * 35 / 100));
         listX = panelX + padding;
-        listY = panelY + 38;
+        listY = panelY + theme.pageInset() + 38;
         listHeight = Math.max(40, bottom - 8 - listY);
 
         int spineGap = theme.bookStyle() ? 24 : 16;
@@ -82,7 +82,7 @@ public class QuestJournalScreen extends Screen {
 
         int themeX = panelX + padding + font.width(title) + 10;
         addRenderableWidget(QuestButton.normal(themeLabel(), button -> cycleTheme(),
-                themeX, panelY + 5, 112, 18));
+                themeX, panelY + theme.pageInset() + 5, 112, 18));
     }
 
     private Component themeLabel() {
@@ -145,17 +145,18 @@ public class QuestJournalScreen extends Screen {
         QuestUiRenderer.drawPanel(graphics, panelX, panelY, panelWidth, panelHeight);
 
         int innerRight = panelX + panelWidth - padding;
-        graphics.drawString(font, title, panelX + padding, panelY + 9, theme.text(), false);
+        int top = panelY + theme.pageInset();
+        graphics.drawString(font, title, panelX + padding, top + 9, theme.text(), false);
 
         int count = (int) rows.stream().filter(row -> !row.header()).count();
         String countText = Component.translatable("storyquest.journal.quest_count", count).getString();
         int decorationWidth = theme.decoration().width();
         graphics.drawString(font, countText, innerRight - decorationWidth - 8 - font.width(countText),
-                panelY + 10, theme.textMuted(), false);
+                top + 10, theme.textMuted(), false);
 
         QuestUiRenderer.drawDecoration(graphics, innerRight - decorationWidth, panelY + 6);
 
-        QuestUiRenderer.drawDivider(graphics, panelX + padding, panelY + HEADER_HEIGHT, panelWidth - padding * 2);
+        QuestUiRenderer.drawDivider(graphics, panelX + padding, top + HEADER_HEIGHT, panelWidth - padding * 2);
 
         drawQuestList(graphics, mouseX, mouseY);
         drawDetails(graphics);
@@ -185,7 +186,7 @@ public class QuestJournalScreen extends Screen {
                     String label = row.chapter().isBlank()
                             ? Component.translatable("storyquest.journal.no_chapter").getString()
                             : row.chapter();
-                    graphics.drawString(font, font.plainSubstrByWidth(label, listWidth - 16), listX + 8, y + 4,
+                    graphics.drawString(font, QuestUiRenderer.fitText(font, label, listWidth - 16), listX + 8, y + 4,
                             theme.textMuted(), false);
                     graphics.fill(listX + 8, y + 15, listX + listWidth - 8, y + 16,
                             QuestUiRenderer.alpha(theme.textMuted(), 0.45F));
@@ -213,7 +214,7 @@ public class QuestJournalScreen extends Screen {
                             icon = "scroll";
                         }
                         QuestUiRenderer.drawIcon(graphics, icon, listX + 7, y + 3, 12);
-                        graphics.drawString(font, font.plainSubstrByWidth(quest.title, listWidth - 30),
+                        graphics.drawString(font, QuestUiRenderer.fitText(font, quest.title, listWidth - 30),
                                 listX + 23, y + 5, theme.text(), false);
                     }
                 }
@@ -234,16 +235,17 @@ public class QuestJournalScreen extends Screen {
 
     private void drawDetails(GuiGraphics graphics) {
         QuestTheme theme = QuestTheme.current();
+        int top = panelY + theme.pageInset();
         Quest quest = ClientQuestCache.get(selectedId);
         if (quest == null) {
-            graphics.drawString(font, Component.translatable("storyquest.journal.empty"), detailX, panelY + 44,
+            graphics.drawString(font, Component.translatable("storyquest.journal.empty"), detailX, top + 44,
                     theme.textMuted(), false);
-            graphics.drawString(font, Component.translatable("storyquest.journal.empty_hint"), detailX, panelY + 60,
+            graphics.drawString(font, Component.translatable("storyquest.journal.empty_hint"), detailX, top + 60,
                     theme.textMuted(), false);
             return;
         }
 
-        graphics.drawString(font, font.plainSubstrByWidth(quest.title, detailWidth), detailX, panelY + 38,
+        graphics.drawString(font, QuestUiRenderer.fitText(font, quest.title, detailWidth), detailX, top + 38,
                 theme.text(), false);
 
         boolean branchLocked = ClientQuestCache.branchLocked(quest);
@@ -271,11 +273,11 @@ public class QuestJournalScreen extends Screen {
         String chapter = quest.chapter.isBlank()
                 ? Component.translatable("storyquest.journal.no_chapter").getString()
                 : quest.chapter;
-        graphics.drawString(font, font.plainSubstrByWidth(chapter + "  \u00B7  " + state, detailWidth),
-                detailX, panelY + 53, stateColor, false);
-        QuestUiRenderer.drawDivider(graphics, detailX, panelY + 66, detailWidth);
+        graphics.drawString(font, QuestUiRenderer.fitText(font, chapter + "  \u00B7  " + state, detailWidth),
+                detailX, top + 53, stateColor, false);
+        QuestUiRenderer.drawDivider(graphics, detailX, top + 66, detailWidth);
 
-        int y = panelY + 74;
+        int y = top + 74;
         if (!quest.requiredQuests.isEmpty()) {
             String requirementsKey = quest.requireAll
                     ? "storyquest.journal.requirements"
@@ -304,7 +306,7 @@ public class QuestJournalScreen extends Screen {
             Quest winner = ClientQuestCache.branchWinner(quest);
             String line = Component.translatable("storyquest.journal.branch_chosen",
                     winner == null ? "???" : winner.title).getString();
-            graphics.drawString(font, font.plainSubstrByWidth(line, detailWidth), detailX, y,
+            graphics.drawString(font, QuestUiRenderer.fitText(font, line, detailWidth), detailX, y,
                     theme.warning(), false);
             y += 13;
         }
@@ -344,7 +346,7 @@ public class QuestJournalScreen extends Screen {
         } else {
             graphics.fill(x + 2, y + 4, x + 4, y + 6, theme.textMuted());
         }
-        graphics.drawString(font, font.plainSubstrByWidth(text, detailWidth - 12), x + 12, y,
+        graphics.drawString(font, QuestUiRenderer.fitText(font, text, detailWidth - 12), x + 12, y,
                 done ? theme.positive() : theme.textDim(), false);
         return y + 11;
     }

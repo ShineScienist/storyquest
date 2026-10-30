@@ -12,7 +12,7 @@
 
 > **Статус:** стабильная версия **1.2.0** и бета **1.3.0-beta.2** опубликованы на
 > [CurseForge](https://www.curseforge.com/minecraft/mc-mods/storyquest).
-> Ветка `main` содержит разработку **1.3.0-beta.2** — темы Paper и Book.
+> Готовится **1.3.0-beta.3** — исправление обрезки названий глав.
 > Скачивайте релизные jar со страницы проекта, а не из CI-артефактов.
 
 ## Что уже есть
@@ -48,7 +48,7 @@
 gradlew build
 ```
 
-Готовый jar появится в `build/libs/storyquest-1.3.0-beta.2.jar`.
+Готовый jar появится в `build/libs/storyquest-1.3.0-beta.3.jar`.
 
 3. Положите его в `mods` клиента и/или сервера NeoForge 1.21.1.
 

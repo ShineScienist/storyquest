@@ -1,8 +1,8 @@
 # Публикация StoryQuest
 
-> **Статус:** 1.2.0 опубликован на CurseForge. Тексты ниже — рабочий шаблон для
-> следующего релиза. Перед загрузкой 1.3.0 обновите версию, changelog и описание
-> (в 1.3.0 появились темы Paper и Book).
+> **Статус:** 1.2.0 и бета 1.3.0-beta.2 опубликованы на CurseForge. Тексты ниже —
+> шаблон для следующего релиза: перед загрузкой 1.3.0-beta.3 обновите версию,
+> changelog и имя файла. Темы Paper и Book уже входят в 1.3.0.
 
 Здесь лежат готовые тексты и пошаговая инструкция для CurseForge и Modrinth.
 Ничего дополнительно настраивать не нужно: jar, иконка, лицензия и метаданные уже в проекте.
@@ -14,7 +14,7 @@
 | Jar | `build\libs\storyquest-<version>.jar` (собирается `gradlew build`) |
 | Иконка 128×128 | `src\main\resources\storyquest.png` |
 | Лицензия | `LICENSE` (MIT) |
-| Версия | из `gradle.properties`; сейчас `1.3.0-beta.2`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
+| Версия | из `gradle.properties`; сейчас `1.3.0-beta.3`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
 | Среда | клиент и сервер (Client and server) |
 
 Проверка перед загрузкой:
@@ -44,12 +44,12 @@ gradlew build
 8. **Links** — Source: `https://github.com/ShineScienist/storyquest`, Issues: `https://github.com/ShineScienist/storyquest/issues`.
 9. **Tags** — `adventure`, `management`, `utility`, `game-mechanics`; загрузчик `NeoForge`, версия игры `1.21.1`.
 10. Вкладка **Versions** → **Create version**:
-    - Version number: `1.3.0-beta.2`
+    - Version number: `1.3.0-beta.3`
     - Channel: `Beta`
     - Loaders: `NeoForge`
     - Game version: `1.21.1`
-    - File: `storyquest-1.3.0-beta.2.jar`
-    - Changelog: текст из раздела «Changelog 1.3.0-beta.2».
+    - File: `storyquest-1.3.0-beta.3.jar`
+    - Changelog: текст из раздела «Changelog 1.3.0-beta.3».
 
 ---
 
@@ -70,10 +70,10 @@ gradlew build
 7. **License:** MIT (поле `License` в настройках проекта).
 8. **Avatar:** `src\main\resources\storyquest.png`.
 9. Вкладка **Files** → **Upload File**:
-    - File: `storyquest-1.3.0-beta.2.jar`
+    - File: `storyquest-1.3.0-beta.3.jar`
     - Release type: `Beta`
     - Game version: `1.21.1`, loader `NeoForge`
-    - Changelog: текст из раздела «Changelog 1.3.0-beta.2».
+    - Changelog: текст из раздела «Changelog 1.3.0-beta.3».
 
 > Зависимости указывать не нужно: требуется только NeoForge, он есть у всех, кто ставит моды на 1.21.1.
 
@@ -291,6 +291,21 @@ RP-серверов и сюжетных кампаний. Вместо «при�
 ```
 
 ---
+
+## Changelog 1.3.0-beta.3
+
+```markdown
+Fixes for long chapter names.
+
+- Chapter names are no longer cut mid-word: in the journal, the details pane and the quest
+  editor, a name that does not fit is shortened with "..." instead of ending abruptly.
+- The journal chapter column and the editor row give chapter names more room, so normal
+  names such as "Chapter I - Ashen Road" are shown in full.
+- In the editor, the chapter and the objective count now sit at opposite ends of the row
+  and no longer share one narrow column.
+- Book theme: the journal title and the theme button no longer overlap the cover frame;
+  the header starts below the inner page edge.
+```
 
 ## Changelog 1.3.0-beta.2
 

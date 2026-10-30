@@ -2,6 +2,7 @@ package com.shinecreator.storyquest.client.gui.theme;
 
 import com.shinecreator.storyquest.client.gui.theme.QuestTheme.Slice;
 
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
@@ -105,6 +106,25 @@ public final class QuestUiRenderer {
 
     public static void clearTint(GuiGraphics graphics) {
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    /**
+     * Shortens a string to fit {@code maxWidth}, adding an ellipsis instead of
+     * cutting the last word in half. Text that already fits is returned as is.
+     */
+    public static String fitText(Font font, String text, int maxWidth) {
+        if (text == null || text.isEmpty() || maxWidth <= 0) {
+            return "";
+        }
+        if (font.width(text) <= maxWidth) {
+            return text;
+        }
+        String ellipsis = "...";
+        int ellipsisWidth = font.width(ellipsis);
+        if (ellipsisWidth >= maxWidth) {
+            return "";
+        }
+        return font.plainSubstrByWidth(text, maxWidth - ellipsisWidth).stripTrailing() + ellipsis;
     }
 
     public static int alpha(int rgb, float alpha) {

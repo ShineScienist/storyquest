@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.0-beta.3
+
+Fixes for long chapter names.
+
+- Chapter names are no longer cut mid-word: in the journal, the details pane and the quest
+  editor, a name that does not fit is shortened with `...` instead of ending abruptly.
+- The journal chapter column and the editor row give chapter names more room, so normal
+  names such as `Chapter I - Ashen Road` are shown in full.
+- In the editor, the chapter and the objective count now sit at opposite ends of the row
+  and no longer share one narrow column.
+- Book theme: the journal title and the theme button no longer overlap the cover frame;
+  the header starts below the inner page edge.
+
 ## 1.3.0-beta.2
 
 Fixes for the first beta build.
