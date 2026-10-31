@@ -34,6 +34,20 @@ public final class QuestPayloads {
         }
     }
 
+    /** Server to client: lightweight progress update without resending quest definitions. */
+    public record ProgressSync(CompoundTag progress, CompoundTag shared) implements CustomPacketPayload {
+        public static final Type<ProgressSync> TYPE = new Type<>(id("progress_sync"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, ProgressSync> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.COMPOUND_TAG, ProgressSync::progress,
+                ByteBufCodecs.COMPOUND_TAG, ProgressSync::shared,
+                ProgressSync::new);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     /** Server to client: open the quest editor with all quest definitions. */
     public record OpenEditor(CompoundTag data) implements CustomPacketPayload {
         public static final Type<OpenEditor> TYPE = new Type<>(id("open_editor"));

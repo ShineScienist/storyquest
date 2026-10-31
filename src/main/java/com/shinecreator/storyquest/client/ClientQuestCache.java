@@ -25,9 +25,11 @@ public final class ClientQuestCache {
     private static final Set<String> ACTIVE = new LinkedHashSet<>();
     private static final Set<String> COMPLETED = new LinkedHashSet<>();
     private static final Map<String, Set<Integer>> OBJECTIVES = new LinkedHashMap<>();
+    private static final Map<String, Map<Integer, Integer>> COUNTERS = new LinkedHashMap<>();
     private static final Set<String> SHARED_ACTIVE = new LinkedHashSet<>();
     private static final Set<String> SHARED_COMPLETED = new LinkedHashSet<>();
     private static final Map<String, Set<Integer>> SHARED_OBJECTIVES = new LinkedHashMap<>();
+    private static final Map<String, Map<Integer, Integer>> SHARED_COUNTERS = new LinkedHashMap<>();
     private static String tracked = "";
     private static int version;
 
@@ -38,9 +40,11 @@ public final class ClientQuestCache {
         ACTIVE.clear();
         COMPLETED.clear();
         OBJECTIVES.clear();
+        COUNTERS.clear();
         SHARED_ACTIVE.clear();
         SHARED_COMPLETED.clear();
         SHARED_OBJECTIVES.clear();
+        SHARED_COUNTERS.clear();
         tracked = "";
 
         ListTag questList = tag.getList("Quests", Tag.TAG_COMPOUND);
@@ -52,16 +56,37 @@ public final class ClientQuestCache {
         }
 
         CompoundTag progress = tag.getCompound("Progress");
-        readProgress(progress, ACTIVE, COMPLETED, OBJECTIVES);
+        readProgress(progress, ACTIVE, COMPLETED, OBJECTIVES, COUNTERS);
         tracked = progress.getString("Tracked");
 
         CompoundTag shared = tag.getCompound("Shared");
-        readProgress(shared, SHARED_ACTIVE, SHARED_COMPLETED, SHARED_OBJECTIVES);
+        readProgress(shared, SHARED_ACTIVE, SHARED_COMPLETED, SHARED_OBJECTIVES, SHARED_COUNTERS);
+        version++;
+    }
+
+    /**
+     * Applies a lightweight progress-only update. The quest definitions stay
+     * on the client; active/completed flags, done objectives and counters are
+     * refreshed from the new snapshot.
+     */
+    public static void updateProgress(CompoundTag progress, CompoundTag shared) {
+        ACTIVE.clear();
+        COMPLETED.clear();
+        OBJECTIVES.clear();
+        COUNTERS.clear();
+        SHARED_ACTIVE.clear();
+        SHARED_COMPLETED.clear();
+        SHARED_OBJECTIVES.clear();
+        SHARED_COUNTERS.clear();
+        readProgress(progress, ACTIVE, COMPLETED, OBJECTIVES, COUNTERS);
+        readProgress(shared, SHARED_ACTIVE, SHARED_COMPLETED, SHARED_OBJECTIVES, SHARED_COUNTERS);
+        tracked = progress.getString("Tracked");
         version++;
     }
 
     private static void readProgress(CompoundTag progress, Set<String> active,
-            Set<String> completed, Map<String, Set<Integer>> objectives) {
+            Set<String> completed, Map<String, Set<Integer>> objectives,
+            Map<String, Map<Integer, Integer>> counters) {
         readStrings(progress.getList("Active", Tag.TAG_STRING), active);
         readStrings(progress.getList("Completed", Tag.TAG_STRING), completed);
 
@@ -74,6 +99,25 @@ public final class ClientQuestCache {
             }
             objectives.put(questId, indexes);
         }
+        readCounters(progress.getCompound("Counters"), counters);
+    }
+
+    private static void readCounters(CompoundTag counterTag, Map<String, Map<Integer, Integer>> target) {
+        target.clear();
+        for (String questId : counterTag.getAllKeys()) {
+            CompoundTag questCounters = counterTag.getCompound(questId);
+            Map<Integer, Integer> values = new LinkedHashMap<>();
+            for (String key : questCounters.getAllKeys()) {
+                try {
+                    values.put(Integer.parseInt(key), questCounters.getInt(key));
+                } catch (NumberFormatException ignored) {
+                    // Ignore malformed entries instead of breaking the whole update.
+                }
+            }
+            if (!values.isEmpty()) {
+                target.put(questId, values);
+            }
+        }
     }
 
     public static void clear() {
@@ -81,9 +125,11 @@ public final class ClientQuestCache {
         ACTIVE.clear();
         COMPLETED.clear();
         OBJECTIVES.clear();
+        COUNTERS.clear();
         SHARED_ACTIVE.clear();
         SHARED_COMPLETED.clear();
         SHARED_OBJECTIVES.clear();
+        SHARED_COUNTERS.clear();
         tracked = "";
         version++;
     }
@@ -131,6 +177,16 @@ public final class ClientQuestCache {
                 ? SHARED_OBJECTIVES.get(questId)
                 : OBJECTIVES.get(questId);
         return done != null && done.contains(index);
+    }
+
+    /** Current counter value for a counter objective, or zero when unknown. */
+    public static int objectiveProgress(String questId, int index) {
+        Quest quest = get(questId);
+        Map<Integer, Integer> values = quest != null && quest.scope == Quest.Scope.SHARED
+                ? SHARED_COUNTERS.get(questId)
+                : COUNTERS.get(questId);
+        Integer value = values == null ? null : values.get(index);
+        return value == null ? 0 : value;
     }
 
     public static String tracked() {

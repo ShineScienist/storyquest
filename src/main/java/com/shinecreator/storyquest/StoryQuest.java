@@ -63,6 +63,8 @@ public class StoryQuest {
         } else {
             registrar.playToClient(QuestPayloads.Sync.TYPE, QuestPayloads.Sync.STREAM_CODEC,
                     StoryQuest::ignorePayload);
+            registrar.playToClient(QuestPayloads.ProgressSync.TYPE, QuestPayloads.ProgressSync.STREAM_CODEC,
+                    StoryQuest::ignorePayload);
             registrar.playToClient(QuestPayloads.OpenEditor.TYPE, QuestPayloads.OpenEditor.STREAM_CODEC,
                     StoryQuest::ignorePayload);
             registrar.playToClient(QuestPayloads.OpenDialogue.TYPE, QuestPayloads.OpenDialogue.STREAM_CODEC,
@@ -75,6 +77,8 @@ public class StoryQuest {
     private static void registerClientHandlers(PayloadRegistrar registrar) {
         registrar.playToClient(QuestPayloads.Sync.TYPE, QuestPayloads.Sync.STREAM_CODEC,
                 ClientPayloadHandler::handleSync);
+        registrar.playToClient(QuestPayloads.ProgressSync.TYPE, QuestPayloads.ProgressSync.STREAM_CODEC,
+                ClientPayloadHandler::handleProgressSync);
         registrar.playToClient(QuestPayloads.OpenEditor.TYPE, QuestPayloads.OpenEditor.STREAM_CODEC,
                 ClientPayloadHandler::handleOpenEditor);
         registrar.playToClient(QuestPayloads.OpenDialogue.TYPE, QuestPayloads.OpenDialogue.STREAM_CODEC,

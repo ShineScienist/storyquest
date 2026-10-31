@@ -48,6 +48,11 @@ public final class QuestHud {
             boolean done = ClientQuestCache.isObjectiveDone(quest.id, i);
             String prefix = done ? "\u2714 " : "\u2022 ";
             String text = prefix + objective.displayText();
+            if (objective.isCounted()) {
+                int value = Math.min(ClientQuestCache.objectiveProgress(quest.id, i), objective.count);
+                text += "  " + net.minecraft.network.chat.Component.translatable(
+                        "storyquest.objective.progress", value, objective.count).getString();
+            }
             lines[i] = minecraft.font.plainSubstrByWidth(text, maxTextWidth);
             doneFlags[i] = done;
             contentWidth = Math.max(contentWidth, minecraft.font.width(lines[i]));

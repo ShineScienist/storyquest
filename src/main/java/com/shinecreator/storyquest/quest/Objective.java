@@ -11,19 +11,48 @@ import net.minecraft.resources.ResourceLocation;
  * <p>
  * {@link Type#MANUAL} objectives are completed by a command or by the editor.
  * {@link Type#VISIT} objectives are completed automatically when the player enters a spherical area.
+ * The remaining types count player actions (kills, items, blocks) or elapsed time.
  */
 public final class Objective {
     public enum Type {
         MANUAL,
-        VISIT;
+        VISIT,
+        KILL,
+        COLLECT,
+        CRAFT,
+        MINE,
+        INTERACT,
+        TIMER;
 
         public String translationKey() {
             return "storyquest.objective.type." + name().toLowerCase(Locale.ROOT);
+        }
+
+        /** Types that keep a numeric counter instead of a simple done flag. */
+        public boolean isCounter() {
+            return switch (this) {
+                case MANUAL, VISIT -> false;
+                default -> true;
+            };
+        }
+
+        /** Types that need an entity, item or block id in {@link #target}. */
+        public boolean needsTarget() {
+            return switch (this) {
+                case KILL, COLLECT, CRAFT, MINE, INTERACT -> true;
+                default -> false;
+            };
         }
     }
 
     public Type type = Type.MANUAL;
     public String text = "";
+    /** Entity, item or block id for counter objectives. */
+    public String target = "";
+    /** Required amount for counter objectives; for timers this is seconds. */
+    public int count = 1;
+    /** Collect objectives only: remove the items when the objective completes. */
+    public boolean consume;
     public String dimension = "minecraft:overworld";
     public double x;
     public double y;
@@ -81,6 +110,33 @@ public final class Objective {
         return dx * dx + dy * dy + dz * dz <= r * r;
     }
 
+    public boolean isCounted() {
+        return type != null && type.isCounter();
+    }
+
+    public boolean matchesTarget(String id) {
+        if (type == null || !type.needsTarget()) {
+            return true;
+        }
+        return normalizeTarget().equals(normalizeTarget(id));
+    }
+
+    /**
+     * Normalizes an id typed by hand: trims, lower-cases and adds the
+     * {@code minecraft:} namespace when it is missing.
+     */
+    public String normalizeTarget() {
+        return normalizeTarget(target);
+    }
+
+    public static String normalizeTarget(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        String trimmed = raw.trim().toLowerCase(Locale.ROOT);
+        return trimmed.contains(":") ? trimmed : "minecraft:" + trimmed;
+    }
+
     public String normalizeDimension() {
         if (dimension == null || dimension.isBlank()) {
             return "minecraft:overworld";
@@ -93,6 +149,9 @@ public final class Objective {
         CompoundTag tag = new CompoundTag();
         tag.putString("type", type.name());
         tag.putString("text", text == null ? "" : text);
+        tag.putString("target", target == null ? "" : target);
+        tag.putInt("count", count);
+        tag.putBoolean("consume", consume);
         tag.putString("dimension", normalizeDimension());
         tag.putDouble("x", x);
         tag.putDouble("y", y);
@@ -114,6 +173,9 @@ public final class Objective {
             objective.type = Type.MANUAL;
         }
         objective.text = tag.contains("text", Tag.TAG_STRING) ? tag.getString("text") : "";
+        objective.target = tag.contains("target", Tag.TAG_STRING) ? tag.getString("target") : "";
+        objective.count = tag.contains("count", Tag.TAG_INT) ? tag.getInt("count") : 1;
+        objective.consume = tag.getBoolean("consume");
         objective.dimension = tag.contains("dimension", Tag.TAG_STRING)
                 ? tag.getString("dimension")
                 : "minecraft:overworld";

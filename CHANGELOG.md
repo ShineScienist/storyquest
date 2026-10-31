@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.0-beta.1
+
+Counter objectives: the first step towards replacing FTB Quests.
+
+- Six new objective types that complete automatically while the quest is active:
+  - **Kill** — defeat a mob (`minecraft:zombie`, `minecraft:creeper`, ...);
+  - **Collect** — have a number of items in the inventory; optionally consume them on completion;
+  - **Craft** — craft an item (shift-crafting counts the whole output);
+  - **Mine** — break a block;
+  - **Interact** — right-click a block (chests, levers, workbenches, ...);
+  - **Timer** — survive a number of real seconds.
+- The objective editor can switch types (Shift-click cycles backwards), pick a target from the held item,
+  the crosshair block or the crosshair entity, and set the required amount.
+- Progress is counted only for active quests; unrelated kills, items and blocks are ignored.
+- Collect objectives check the real inventory, so dropping or spending items lowers the counter.
+- Shared co-op quests pool counters: kills, crafts and collected items from every online player count.
+- Journal and HUD show progress as `3 / 10`; counter values are stored next to the done flags and
+  old worlds load without migration.
+- Progress updates use a new lightweight packet, so frequent actions do not resend the quest list.
+- JSON format version 2 adds `target`, `count` and `consume`. Version 1 files still import unchanged.
+- The 1.3.0 content is unchanged: Paper/Book themes, conditions, branches and world-shared co-op.
+
 ## 1.3.0-beta.3
 
 Fixes for long chapter names.

@@ -16,13 +16,15 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.shinecreator.storyquest.StoryQuest;
 
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.ModList;
 
 /**
  * JSON exchange format for quest definitions. Player progress is not included.
  */
 public final class QuestJson {
-    public static final int FORMAT_VERSION = 1;
+    public static final int FORMAT_VERSION = 2;
+    private static final int MIN_FORMAT_VERSION = 1;
 
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
@@ -69,8 +71,9 @@ public final class QuestJson {
         }
 
         int version = intValue(root, "formatVersion", FORMAT_VERSION, result.errors);
-        if (version != FORMAT_VERSION) {
-            result.errors.add("Unsupported formatVersion: " + version + " (expected " + FORMAT_VERSION + ").");
+        if (version < MIN_FORMAT_VERSION || version > FORMAT_VERSION) {
+            result.errors.add("Unsupported formatVersion: " + version + " (supported "
+                    + MIN_FORMAT_VERSION + ".." + FORMAT_VERSION + ").");
             return result;
         }
         if (!root.has("quests") || !root.get("quests").isJsonArray()) {
@@ -184,6 +187,9 @@ public final class QuestJson {
         JsonObject object = new JsonObject();
         object.addProperty("type", objective.type.name().toLowerCase(Locale.ROOT));
         object.addProperty("text", objective.text);
+        object.addProperty("target", objective.target);
+        object.addProperty("count", objective.count);
+        object.addProperty("consume", objective.consume);
         object.addProperty("dimension", objective.normalizeDimension());
         object.addProperty("x", objective.x);
         object.addProperty("y", objective.y);
@@ -295,15 +301,42 @@ public final class QuestJson {
         String prefix = "Quest " + questId + " objective #" + index + ": ";
 
         String type = stringValue(object, "type", "manual").toLowerCase(Locale.ROOT);
-        if (type.equals("manual")) {
-            objective.type = Objective.Type.MANUAL;
-        } else if (type.equals("visit")) {
-            objective.type = Objective.Type.VISIT;
-        } else {
+        Objective.Type parsedType = switch (type) {
+            case "manual" -> Objective.Type.MANUAL;
+            case "visit" -> Objective.Type.VISIT;
+            case "kill" -> Objective.Type.KILL;
+            case "collect" -> Objective.Type.COLLECT;
+            case "craft" -> Objective.Type.CRAFT;
+            case "mine" -> Objective.Type.MINE;
+            case "interact" -> Objective.Type.INTERACT;
+            case "timer" -> Objective.Type.TIMER;
+            default -> null;
+        };
+        if (parsedType == null) {
             errors.add(prefix + "invalid type '" + type + "'.");
+        } else {
+            objective.type = parsedType;
         }
 
         objective.text = stringValue(object, "text", "");
+        objective.target = Objective.normalizeTarget(stringValue(object, "target", ""));
+        objective.count = intValue(object, "count", 1, errors);
+        objective.consume = boolValue(object, "consume", false);
+
+        if (parsedType != null && parsedType.needsTarget()) {
+            ResourceLocation targetId = ResourceLocation.tryParse(objective.target);
+            if (targetId == null) {
+                errors.add(prefix + "invalid target '" + objective.target + "'.");
+            }
+        }
+        if (parsedType != null && parsedType.isCounter()
+                && (objective.count < 1 || objective.count > 1_000_000)) {
+            errors.add(prefix + "count must be between 1 and 1000000.");
+        }
+        if (parsedType != Objective.Type.COLLECT) {
+            objective.consume = false;
+        }
+
         objective.dimension = stringValue(object, "dimension", "minecraft:overworld");
         if (net.minecraft.resources.ResourceLocation.tryParse(objective.normalizeDimension()) == null) {
             errors.add(prefix + "invalid dimension '" + objective.dimension + "'.");

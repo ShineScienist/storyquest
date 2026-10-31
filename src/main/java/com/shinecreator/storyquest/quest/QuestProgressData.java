@@ -18,6 +18,7 @@ public class QuestProgressData {
     protected static final String ACTIVE = "Active";
     protected static final String COMPLETED = "Completed";
     protected static final String OBJECTIVES = "Objectives";
+    protected static final String COUNTERS = "Counters";
 
     protected final CompoundTag tag;
 
@@ -55,6 +56,44 @@ public class QuestProgressData {
         return completedObjectives(questId).contains(index);
     }
 
+    /**
+     * Current value of a counter objective. Missing counters read as zero, so
+     * old saves keep working without a data upgrade.
+     */
+    public int counter(String questId, int index) {
+        CompoundTag counters = tag.getCompound(COUNTERS);
+        CompoundTag questCounters = counters.getCompound(questId);
+        String key = Integer.toString(index);
+        return questCounters.contains(key, Tag.TAG_INT) ? questCounters.getInt(key) : 0;
+    }
+
+    public void setCounter(String questId, int index, int value) {
+        CompoundTag counters = tag.contains(COUNTERS, Tag.TAG_COMPOUND)
+                ? tag.getCompound(COUNTERS)
+                : new CompoundTag();
+        CompoundTag questCounters = counters.contains(questId, Tag.TAG_COMPOUND)
+                ? counters.getCompound(questId)
+                : new CompoundTag();
+        String key = Integer.toString(index);
+        if (value <= 0) {
+            questCounters.remove(key);
+        } else {
+            questCounters.putInt(key, value);
+        }
+        if (questCounters.isEmpty()) {
+            counters.remove(questId);
+        } else {
+            counters.put(questId, questCounters);
+        }
+        tag.put(COUNTERS, counters);
+    }
+
+    public int addCounter(String questId, int index, int amount) {
+        int next = Math.max(0, counter(questId, index) + amount);
+        setCounter(questId, index, next);
+        return next;
+    }
+
     public boolean allObjectivesDone(Quest quest) {
         Set<Integer> done = completedObjectives(quest.id);
         for (int i = 0; i < quest.objectives.size(); i++) {
@@ -86,6 +125,7 @@ public class QuestProgressData {
         completed.add(quest.id);
         writeStrings(COMPLETED, completed);
         clearObjectives(quest.id);
+        clearCounters(quest.id);
     }
 
     public void markObjective(String questId, int index) {
@@ -115,6 +155,17 @@ public class QuestProgressData {
         }
     }
 
+    public void clearCounters(String questId) {
+        if (!tag.contains(COUNTERS, Tag.TAG_COMPOUND)) {
+            return;
+        }
+        CompoundTag counters = tag.getCompound(COUNTERS);
+        if (counters.contains(questId)) {
+            counters.remove(questId);
+            tag.put(COUNTERS, counters);
+        }
+    }
+
     public void forgetQuest(String questId) {
         Set<String> active = active();
         if (active.remove(questId)) {
@@ -125,6 +176,7 @@ public class QuestProgressData {
             writeStrings(COMPLETED, completed);
         }
         clearObjectives(questId);
+        clearCounters(questId);
     }
 
     public void reset() {
@@ -148,6 +200,7 @@ public class QuestProgressData {
             objectivesCopy.put(key, objectives.getList(key, Tag.TAG_INT).copy());
         }
         out.put(OBJECTIVES, objectivesCopy);
+        out.put(COUNTERS, tag.getCompound(COUNTERS).copy());
         return out;
     }
 

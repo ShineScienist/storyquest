@@ -106,6 +106,13 @@ public final class Quest {
             if (objective.markerIcon == null) {
                 objective.markerIcon = MarkerIcon.CHECK;
             }
+            objective.target = objective.type != null && objective.type.needsTarget()
+                    ? objective.normalizeTarget()
+                    : "";
+            objective.count = Math.max(1, Math.min(1_000_000, objective.count));
+            if (objective.type != Objective.Type.COLLECT) {
+                objective.consume = false;
+            }
         }
     }
 

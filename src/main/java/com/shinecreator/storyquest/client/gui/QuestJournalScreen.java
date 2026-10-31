@@ -318,8 +318,17 @@ public class QuestJournalScreen extends Screen {
             int shown = Math.min(quest.objectives.size(), 7);
             for (int i = 0; i < shown; i++) {
                 Objective objective = quest.objectives.get(i);
-                boolean done = ClientQuestCache.isObjectiveDone(quest.id, i);
-                y = drawSymbolLine(graphics, objective.displayText(), detailX, y, done, theme);
+                boolean done = ClientQuestCache.isCompleted(quest.id)
+                        || ClientQuestCache.isObjectiveDone(quest.id, i);
+                String label = objective.displayText();
+                if (objective.isCounted()) {
+                    int value = done
+                            ? objective.count
+                            : Math.min(ClientQuestCache.objectiveProgress(quest.id, i), objective.count);
+                    label += "  " + Component.translatable("storyquest.objective.progress",
+                            value, objective.count).getString();
+                }
+                y = drawSymbolLine(graphics, label, detailX, y, done, theme);
             }
             if (quest.objectives.size() > shown) {
                 graphics.drawString(font, "+" + (quest.objectives.size() - shown), detailX, y,

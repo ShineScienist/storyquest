@@ -56,6 +56,21 @@ public final class SharedQuestProgress extends SavedData {
         return progress.isObjectiveDone(questId, index);
     }
 
+    public int counter(String questId, int index) {
+        return progress.counter(questId, index);
+    }
+
+    public void setCounter(String questId, int index, int value) {
+        progress.setCounter(questId, index, value);
+        setDirty();
+    }
+
+    public int addCounter(String questId, int index, int amount) {
+        int next = progress.addCounter(questId, index, amount);
+        setDirty();
+        return next;
+    }
+
     public boolean allObjectivesDone(Quest quest) {
         return progress.allObjectivesDone(quest);
     }

@@ -1,8 +1,8 @@
 # Публикация StoryQuest
 
-> **Статус:** 1.2.0 и бета 1.3.0-beta.2 опубликованы на CurseForge. Тексты ниже —
-> шаблон для следующего релиза: перед загрузкой 1.3.0-beta.3 обновите версию,
-> changelog и имя файла. Темы Paper и Book уже входят в 1.3.0.
+> **Статус:** 1.2.0 опубликован на CurseForge; бета 1.3.0-beta.3 готова к публикации.
+> Тексты ниже — шаблон для следующего релиза: перед загрузкой 1.4.0-beta.1 обновите версию,
+> changelog и имя файла. Цели-счётчики уже входят в 1.4.0-beta.1.
 
 Здесь лежат готовые тексты и пошаговая инструкция для CurseForge и Modrinth.
 Ничего дополнительно настраивать не нужно: jar, иконка, лицензия и метаданные уже в проекте.
@@ -14,7 +14,7 @@
 | Jar | `build\libs\storyquest-<version>.jar` (собирается `gradlew build`) |
 | Иконка 128×128 | `src\main\resources\storyquest.png` |
 | Лицензия | `LICENSE` (MIT) |
-| Версия | из `gradle.properties`; сейчас `1.3.0-beta.3`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
+| Версия | из `gradle.properties`; сейчас `1.4.0-beta.1`, Minecraft `1.21.1`, NeoForge `21.1.0+` (собрано на 21.1.264) |
 | Среда | клиент и сервер (Client and server) |
 
 Проверка перед загрузкой:
@@ -44,12 +44,12 @@ gradlew build
 8. **Links** — Source: `https://github.com/ShineScienist/storyquest`, Issues: `https://github.com/ShineScienist/storyquest/issues`.
 9. **Tags** — `adventure`, `management`, `utility`, `game-mechanics`; загрузчик `NeoForge`, версия игры `1.21.1`.
 10. Вкладка **Versions** → **Create version**:
-    - Version number: `1.3.0-beta.3`
+    - Version number: `1.4.0-beta.1`
     - Channel: `Beta`
     - Loaders: `NeoForge`
     - Game version: `1.21.1`
-    - File: `storyquest-1.3.0-beta.3.jar`
-    - Changelog: текст из раздела «Changelog 1.3.0-beta.3».
+    - File: `storyquest-1.4.0-beta.1.jar`
+    - Changelog: текст из раздела «Changelog 1.4.0-beta.1».
 
 ---
 
@@ -70,10 +70,10 @@ gradlew build
 7. **License:** MIT (поле `License` в настройках проекта).
 8. **Avatar:** `src\main\resources\storyquest.png`.
 9. Вкладка **Files** → **Upload File**:
-    - File: `storyquest-1.3.0-beta.3.jar`
+    - File: `storyquest-1.4.0-beta.1.jar`
     - Release type: `Beta`
     - Game version: `1.21.1`, loader `NeoForge`
-    - Changelog: текст из раздела «Changelog 1.3.0-beta.3».
+    - Changelog: текст из раздела «Changelog 1.4.0-beta.1».
 
 > Зависимости указывать не нужно: требуется только NeoForge, он есть у всех, кто ставит моды на 1.21.1.
 
@@ -101,10 +101,18 @@ and scripted events.
   are configurable on the client.
 - **Dialogues** — a narrator line and paginated text (pages split by `|`) on quest start and completion,
   or on demand from a command.
-- **Two objective types:**
+- **Eight objective types:**
   - *Manual* — completed by a command or command block;
   - *Visit* — completed automatically when the player enters a sphere
-    (dimension + X/Y/Z + radius).
+    (dimension + X/Y/Z + radius);
+  - *Kill* — defeat a number of mobs;
+  - *Collect* — have a number of items in the inventory; optionally consume them;
+  - *Craft* — craft an item (shift-crafting counts the whole output);
+  - *Mine* — break a number of blocks;
+  - *Interact* — right-click a block (chests, levers, workbenches);
+  - *Timer* — stay active for a number of real seconds.
+  Counter objectives show progress as `3 / 10` in the journal and HUD, and shared co-op
+  quests pool counters from every online player.
 - **Quest markers and waypoints** — each Visit objective can have its own marker: a checkmark,
   pin or star icon, custom color, label and an optional vertical light beam. A top-screen compass
   shows the direction, name and distance to the nearest objective of the tracked quest, and
@@ -178,9 +186,9 @@ Works in single player and on dedicated servers. No other mods required.
 ## Notes
 
 - One tracked quest at a time (several quests can be active).
-- No branching dialogue trees - branch with conditions and commands. They are planned for 1.4.0.
-- Item/kill objectives are done with commands plus `/storyquest objective complete`.
-- Co-op in 1.2.0+ uses one shared world progress. Separate parties are planned for 1.4.0.
+- No branching dialogue trees - branch with conditions and commands. They are planned for 1.5.0.
+- Item tags, NBT filters, advancements and statistics are planned for the next 1.4.0 beta.
+- Co-op in 1.2.0+ uses one shared world progress. Separate parties are planned for 1.5.0.
 - JSON export/import is command-based; editor buttons are not included yet.
 - MIT license.
 ```
@@ -207,10 +215,18 @@ RP-серверов и сюжетных кампаний. Вместо «при�
 - **HUD-трекер**: активный квест и его цели; угол, смещение, масштаб, прозрачность и цвета настраиваются на клиенте.
 - **Диалоги**: имя рассказчика и постраничный текст (страницы разделяются `|`) при старте и завершении квеста
   или по команде.
-- **Два типа целей:**
+- **Восемь типов целей:**
   - *Вручную* — закрывается командой или командным блоком;
   - *Посещение* — закрывается автоматически, когда игрок входит в сферу
-    (измерение + X/Y/Z + радиус).
+    (измерение + X/Y/Z + радиус);
+  - *Убийство* — победить нужное число мобов;
+  - *Собрать* — иметь нужное число предметов в инвентаре; можно забирать их при завершении;
+  - *Скрафтить* — создать предмет (shift-крафт считается целиком);
+  - *Добыть* — разрушить нужное число блоков;
+  - *Взаимодействие* — правый клик по блоку (сундуки, рычаги, верстаки);
+  - *Таймер* — продержаться нужное число реальных секунд.
+  Цели-счётчики показывают прогресс `3 / 10` в журнале и HUD, а в общих квестах
+  счётчики складываются у всех игроков онлайн.
 - **Метки и вейпоинты** — у каждой цели «Посещение» своя метка: галочка, булавка или звезда,
   цвет, подпись и луч света в мире. Сверху экрана — компас с направлением, названием и
   расстоянием до ближайшей цели отслеживаемого квеста (умеет показывать другое измерение).
@@ -283,14 +299,35 @@ RP-серверов и сюжетных кампаний. Вместо «при�
 ## Примечания
 
 - Отслеживается один квест за раз (активными могут быть несколько).
-- Дерева диалогов с выборами нет — ветвление делается условиями и командами. Оно запланировано на 1.4.0.
-- Цели «принести предмет» / «убить моба» делаются командами и `/storyquest objective complete`.
-- Кооп в 1.2.0+ — один общий прогресс на мир. Отдельные пати запланированы на 1.4.0.
+- Дерева диалогов с выборами нет — ветвление делается условиями и командами. Оно запланировано на 1.5.0.
+- Теги предметов, NBT-фильтры, advancement и statistic запланированы на следующую бету 1.4.0.
+- Кооп в 1.2.0+ — один общий прогресс на мир. Отдельные пати запланированы на 1.5.0.
 - Экспорт и импорт JSON доступны командами; кнопок в редакторе пока нет.
 - Лицензия MIT.
 ```
 
 ---
+
+## Changelog 1.4.0-beta.1
+
+```markdown
+Counter objectives: the first step towards replacing FTB Quests.
+
+- Six new objective types that complete automatically while the quest is active:
+  Kill (mobs), Collect (items in the inventory, optional consumption on completion),
+  Craft (shift-crafting counts the whole output), Mine (blocks), Interact (right-clicked
+  blocks) and Timer (real seconds).
+- The objective editor can switch types (Shift-click cycles backwards), pick a target from the
+  held item, the crosshair block or the crosshair entity, and set the required amount.
+- Progress is counted only for active quests; unrelated kills, items and blocks are ignored.
+- Collect objectives read the real inventory, so dropping or spending items lowers the counter.
+- Shared co-op quests pool counters from every online player.
+- Journal and HUD show progress as "3 / 10"; counters are stored next to the done flags and
+  old worlds load without migration.
+- A lightweight progress packet keeps frequent actions from resending the quest list.
+- JSON format version 2 adds target, count and consume. Version 1 files still import unchanged.
+- Paper/Book themes, conditions, branches and world-shared co-op from 1.3.0 are unchanged.
+```
 
 ## Changelog 1.3.0-beta.3
 

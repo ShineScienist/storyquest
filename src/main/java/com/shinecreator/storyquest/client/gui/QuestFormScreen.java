@@ -430,6 +430,22 @@ public class QuestFormScreen extends Screen {
                     MarkerIcons.draw(graphics, icon, contentX, rowY + 13, 10, objective.markerColor, 0.9F);
                 }
                 graphics.drawString(font, coords, contentX + 14, rowY + 16, theme.textMuted(), false);
+            } else if (objective.isCounted()) {
+                String target = objective.normalizeTarget();
+                String detail;
+                if (objective.type == Objective.Type.TIMER) {
+                    detail = Component.translatable("storyquest.objective.seconds_short", objective.count).getString();
+                } else if (target.isBlank()) {
+                    detail = "\u00D7" + objective.count + "  "
+                            + Component.translatable("storyquest.editor.no_target").getString();
+                } else {
+                    detail = target + "  \u00D7" + objective.count;
+                }
+                if (objective.type == Objective.Type.COLLECT && objective.consume) {
+                    detail += "  " + Component.translatable("storyquest.editor.consume_short").getString();
+                }
+                graphics.drawString(font, font.plainSubstrByWidth(detail, contentWidth - 14),
+                        contentX + 14, rowY + 16, theme.textMuted(), false);
             }
         }
         if (draft.objectives.size() > objectiveRows) {

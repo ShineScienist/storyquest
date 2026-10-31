@@ -18,6 +18,10 @@ public final class ClientPayloadHandler {
         context.enqueueWork(() -> ClientQuestCache.update(payload.data()));
     }
 
+    public static void handleProgressSync(QuestPayloads.ProgressSync payload, IPayloadContext context) {
+        context.enqueueWork(() -> ClientQuestCache.updateProgress(payload.progress(), payload.shared()));
+    }
+
     public static void handleOpenEditor(QuestPayloads.OpenEditor payload, IPayloadContext context) {
         context.enqueueWork(() -> Minecraft.getInstance().setScreen(new QuestEditorScreen(payload.data())));
     }

@@ -12,21 +12,30 @@ import com.shinecreator.storyquest.storage.QuestStorage;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * All server-side quest logic: starting, completing, tracking, visit checks and syncing.
  */
 public final class QuestManager {
+    private static final int TIMER_TICKS = 20;
+
     private static int tickCounter;
+    private static int timerTickCounter;
     private static boolean refreshingAvailability;
 
     private QuestManager() {}
@@ -34,19 +43,356 @@ public final class QuestManager {
     // ------------------------------------------------------------------ ticking
 
     public static void tick(MinecraftServer server) {
+        boolean timerTick = ++timerTickCounter >= TIMER_TICKS;
+        if (timerTick) {
+            timerTickCounter = 0;
+        }
+
         int interval = Math.max(1, StoryQuestConfig.VISIT_CHECK_INTERVAL.get());
-        if (++tickCounter < interval) {
+        boolean visitTick = ++tickCounter >= interval;
+        if (visitTick) {
+            tickCounter = 0;
+        }
+        if (!timerTick && !visitTick) {
             return;
         }
-        tickCounter = 0;
 
         QuestSavedData data = QuestSavedData.get(server);
         if (data.quests().isEmpty()) {
             return;
         }
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            checkVisits(player, data);
+        if (visitTick) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                checkVisits(player, data);
+            }
         }
+        if (timerTick) {
+            tickCounters(server, data);
+        }
+    }
+
+    /** Runs once per second: collect inventories and timers. */
+    private static void tickCounters(MinecraftServer server, QuestSavedData data) {
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
+        if (players.isEmpty()) {
+            return;
+        }
+
+        for (ServerPlayer player : players) {
+            boolean changed = updatePersonalCollect(player, data);
+            changed |= tickPersonalTimers(player, data);
+            if (changed) {
+                syncProgress(player);
+            }
+        }
+
+        if (updateSharedCounters(server, data, players)) {
+            syncProgressAll(server);
+        }
+    }
+
+    private static boolean updatePersonalCollect(ServerPlayer player, QuestSavedData data) {
+        PlayerProgress progress = PlayerProgress.of(player);
+        boolean changed = false;
+        for (String questId : new ArrayList<>(progress.active())) {
+            if (!progress.isActive(questId)) {
+                continue;
+            }
+            Quest quest = data.get(questId);
+            if (quest == null || quest.scope == Quest.Scope.SHARED) {
+                continue;
+            }
+            changed |= updateCollect(player, quest, progress);
+        }
+        return changed;
+    }
+
+    /** Rescans the player's inventory right away, e.g. after an item pickup. */
+    public static void refreshCollect(ServerPlayer player) {
+        if (player == null || player.getServer() == null) {
+            return;
+        }
+        QuestSavedData data = QuestSavedData.get(player.getServer());
+        if (data.quests().isEmpty()) {
+            return;
+        }
+        if (updatePersonalCollect(player, data)) {
+            syncProgress(player);
+        }
+    }
+
+    private static boolean updateCollect(ServerPlayer player, Quest quest, QuestProgressData progress) {
+        boolean changed = false;
+        for (int index = 0; index < quest.objectives.size(); index++) {
+            Objective objective = quest.objectives.get(index);
+            if (objective.type != Objective.Type.COLLECT || progress.isObjectiveDone(quest.id, index)) {
+                continue;
+            }
+            int have = countItem(player, objective.normalizeTarget());
+            int shown = Math.min(objective.count, have);
+            if (shown != progress.counter(quest.id, index)) {
+                progress.setCounter(quest.id, index, shown);
+                changed = true;
+            }
+            if (have >= objective.count) {
+                completeObjective(player, quest, index, true);
+                changed = true;
+                if (!isQuestActive(player, quest)) {
+                    break;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private static boolean tickPersonalTimers(ServerPlayer player, QuestSavedData data) {
+        PlayerProgress progress = PlayerProgress.of(player);
+        boolean changed = false;
+        for (String questId : new ArrayList<>(progress.active())) {
+            if (!progress.isActive(questId)) {
+                continue;
+            }
+            Quest quest = data.get(questId);
+            if (quest == null || quest.scope == Quest.Scope.SHARED) {
+                continue;
+            }
+            changed |= tickTimer(player, quest, progress);
+        }
+        return changed;
+    }
+
+    private static boolean updateSharedCounters(MinecraftServer server, QuestSavedData data,
+            List<ServerPlayer> players) {
+        SharedQuestProgress shared = SharedQuestProgress.get(server);
+        ServerPlayer trigger = players.get(0);
+        boolean changed = false;
+
+        for (String questId : new ArrayList<>(shared.progress().active())) {
+            if (!shared.isActive(questId)) {
+                continue;
+            }
+            Quest quest = data.get(questId);
+            if (quest == null || quest.scope != Quest.Scope.SHARED) {
+                continue;
+            }
+
+            for (int index = 0; index < quest.objectives.size(); index++) {
+                Objective objective = quest.objectives.get(index);
+                if (shared.isObjectiveDone(questId, index)) {
+                    continue;
+                }
+                if (objective.type == Objective.Type.COLLECT) {
+                    int have = countItem(players, objective.normalizeTarget());
+                    int shown = Math.min(objective.count, have);
+                    if (shown != shared.counter(questId, index)) {
+                        shared.setCounter(questId, index, shown);
+                        changed = true;
+                    }
+                    if (have >= objective.count) {
+                        completeObjective(trigger, quest, index, true);
+                        changed = true;
+                    }
+                } else if (objective.type == Objective.Type.TIMER) {
+                    int next = shared.counter(questId, index) + 1;
+                    if (next >= objective.count) {
+                        shared.setCounter(questId, index, objective.count);
+                        completeObjective(trigger, quest, index, true);
+                        changed = true;
+                    } else {
+                        shared.setCounter(questId, index, next);
+                        changed = true;
+                    }
+                }
+                if (!shared.isActive(questId)) {
+                    break;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private static boolean tickTimer(ServerPlayer player, Quest quest, QuestProgressData progress) {
+        boolean changed = false;
+        for (int index = 0; index < quest.objectives.size(); index++) {
+            Objective objective = quest.objectives.get(index);
+            if (objective.type != Objective.Type.TIMER || progress.isObjectiveDone(quest.id, index)) {
+                continue;
+            }
+            int next = progress.counter(quest.id, index) + 1;
+            if (next >= objective.count) {
+                progress.setCounter(quest.id, index, objective.count);
+                completeObjective(player, quest, index, true);
+                changed = true;
+                if (!isQuestActive(player, quest)) {
+                    break;
+                }
+            } else {
+                progress.setCounter(quest.id, index, next);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private static boolean isQuestActive(ServerPlayer player, Quest quest) {
+        return quest.scope == Quest.Scope.SHARED
+                ? SharedQuestProgress.get(player.getServer()).isActive(quest.id)
+                : PlayerProgress.of(player).isActive(quest.id);
+    }
+
+    // ------------------------------------------------------------------ objective actions
+
+    /** Called by gameplay event hooks when the player performs a matching action. */
+    public static void action(ServerPlayer player, Objective.Type type, String target) {
+        action(player, type, target, 1);
+    }
+
+    public static void action(ServerPlayer player, Objective.Type type, String target, int amount) {
+        if (player == null || type == null || amount <= 0) {
+            return;
+        }
+        MinecraftServer server = player.getServer();
+        if (server == null) {
+            return;
+        }
+        QuestSavedData data = QuestSavedData.get(server);
+        if (data.quests().isEmpty()) {
+            return;
+        }
+
+        String normalized = Objective.normalizeTarget(target);
+        boolean personalChanged = false;
+        PlayerProgress personal = PlayerProgress.of(player);
+        for (String questId : new ArrayList<>(personal.active())) {
+            if (!personal.isActive(questId)) {
+                continue;
+            }
+            Quest quest = data.get(questId);
+            if (quest == null || quest.scope == Quest.Scope.SHARED) {
+                continue;
+            }
+            personalChanged |= applyAction(player, quest, personal, type, normalized, amount);
+        }
+
+        boolean sharedChanged = false;
+        SharedQuestProgress shared = SharedQuestProgress.get(server);
+        for (String questId : new ArrayList<>(shared.progress().active())) {
+            if (!shared.isActive(questId)) {
+                continue;
+            }
+            Quest quest = data.get(questId);
+            if (quest == null || quest.scope != Quest.Scope.SHARED) {
+                continue;
+            }
+            sharedChanged |= applyAction(player, quest, shared.progress(), type, normalized, amount);
+        }
+
+        if (sharedChanged) {
+            syncProgressAll(server);
+        } else if (personalChanged) {
+            syncProgress(player);
+        }
+    }
+
+    private static boolean applyAction(ServerPlayer player, Quest quest, QuestProgressData progress,
+            Objective.Type type, String target, int amount) {
+        boolean changed = false;
+        for (int index = 0; index < quest.objectives.size(); index++) {
+            Objective objective = quest.objectives.get(index);
+            if (objective.type != type || progress.isObjectiveDone(quest.id, index)
+                    || !objective.matchesTarget(target)) {
+                continue;
+            }
+            int current = progress.counter(quest.id, index);
+            if (current >= objective.count) {
+                completeObjective(player, quest, index, true);
+                changed = true;
+            } else {
+                int next = Math.min(objective.count, current + amount);
+                progress.setCounter(quest.id, index, next);
+                changed = true;
+                if (next >= objective.count) {
+                    completeObjective(player, quest, index, true);
+                }
+            }
+            if (!isQuestActive(player, quest)) {
+                break;
+            }
+        }
+        return changed;
+    }
+
+    /** Counts matching items in the player's inventory, including the off-hand. */
+    private static int countItem(ServerPlayer player, String targetId) {
+        Item item = resolveItem(targetId);
+        if (item == null) {
+            return 0;
+        }
+        int count = 0;
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack.is(item)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
+    /** Counts matching items across all online players, for shared collect quests. */
+    private static int countItem(List<ServerPlayer> players, String targetId) {
+        int count = 0;
+        for (ServerPlayer player : players) {
+            count += countItem(player, targetId);
+        }
+        return count;
+    }
+
+    private static void consumeItem(ServerPlayer player, String targetId, int amount) {
+        Item item = resolveItem(targetId);
+        if (item == null || amount <= 0) {
+            return;
+        }
+        Inventory inventory = player.getInventory();
+        int remaining = amount;
+        for (int slot = 0; slot < inventory.getContainerSize() && remaining > 0; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!stack.is(item)) {
+                continue;
+            }
+            int taken = Math.min(remaining, stack.getCount());
+            stack.shrink(taken);
+            remaining -= taken;
+            if (stack.isEmpty()) {
+                inventory.setItem(slot, ItemStack.EMPTY);
+            }
+        }
+        inventory.setChanged();
+        if (player.containerMenu != null) {
+            player.containerMenu.broadcastChanges();
+        }
+    }
+
+    private static void consumeItem(MinecraftServer server, String targetId, int amount) {
+        int remaining = amount;
+        for (ServerPlayer online : server.getPlayerList().getPlayers()) {
+            if (remaining <= 0) {
+                break;
+            }
+            int available = countItem(online, targetId);
+            int taken = Math.min(available, remaining);
+            consumeItem(online, targetId, taken);
+            remaining -= taken;
+        }
+    }
+
+    private static Item resolveItem(String targetId) {
+        ResourceLocation id = ResourceLocation.tryParse(Objective.normalizeTarget(targetId));
+        if (id == null) {
+            return null;
+        }
+        Item item = BuiltInRegistries.ITEM.get(id);
+        return item == Items.AIR ? null : item;
     }
 
     private static void checkVisits(ServerPlayer player, QuestSavedData data) {
@@ -274,6 +620,7 @@ public final class QuestManager {
         if (quest == null || index < 0 || index >= quest.objectives.size()) {
             return false;
         }
+        Objective objective = quest.objectives.get(index);
 
         if (quest.scope == Quest.Scope.SHARED) {
             MinecraftServer server = player.getServer();
@@ -281,9 +628,11 @@ public final class QuestManager {
             if (shared.isObjectiveDone(quest.id, index)) {
                 return false;
             }
+            if (objective.type == Objective.Type.COLLECT && objective.consume) {
+                consumeItem(server, objective.normalizeTarget(), objective.count);
+            }
             shared.markObjective(quest.id, index);
             if (announce && StoryQuestConfig.SHOW_MESSAGES.get()) {
-                Objective objective = quest.objectives.get(index);
                 Component message = Component.translatable("storyquest.message.objective_completed",
                         Component.literal(objective.displayText())).withStyle(ChatFormatting.YELLOW);
                 for (ServerPlayer online : server.getPlayerList().getPlayers()) {
@@ -294,7 +643,7 @@ public final class QuestManager {
             if (quest.autoComplete && shared.allObjectivesDone(quest)) {
                 completeSharedQuest(player, quest);
             } else {
-                syncAll(server);
+                syncProgressAll(server);
             }
             return true;
         }
@@ -303,18 +652,21 @@ public final class QuestManager {
         if (progress.isObjectiveDone(quest.id, index)) {
             return false;
         }
+        if (objective.type == Objective.Type.COLLECT && objective.consume) {
+            consumeItem(player, objective.normalizeTarget(), objective.count);
+        }
         progress.markObjective(quest.id, index);
 
         if (announce && StoryQuestConfig.SHOW_MESSAGES.get()) {
-            Objective objective = quest.objectives.get(index);
             player.displayClientMessage(Component.translatable("storyquest.message.objective_completed",
                     Component.literal(objective.displayText())).withStyle(ChatFormatting.YELLOW), false);
         }
         playSound(player, SoundEvents.EXPERIENCE_ORB_PICKUP, 1.6F);
-        sync(player);
 
         if (quest.autoComplete && progress.allObjectivesDone(quest)) {
             completeQuest(player, quest);
+        } else {
+            syncProgress(player);
         }
         return true;
     }
@@ -607,6 +959,19 @@ public final class QuestManager {
         root.put("Progress", progress.snapshot());
         root.put("Shared", SharedQuestProgress.get(player.getServer()).snapshot());
         PacketDistributor.sendToPlayer(player, new QuestPayloads.Sync(root));
+    }
+
+    /** Sends only progress and counters, keeping the quest list on the client. */
+    public static void syncProgress(ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, new QuestPayloads.ProgressSync(
+                PlayerProgress.of(player).snapshot(),
+                SharedQuestProgress.get(player.getServer()).snapshot()));
+    }
+
+    public static void syncProgressAll(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            syncProgress(player);
+        }
     }
 
     /**

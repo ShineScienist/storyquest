@@ -15,7 +15,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 
 /**
  * Editor for a single objective: manual or "visit this place".
@@ -37,6 +44,8 @@ public class ObjectiveEditorScreen extends Screen {
     private int contentY;
     private int contentWidth;
     private EditBox textBox;
+    private EditBox targetBox;
+    private EditBox countBox;
     private EditBox dimensionBox;
     private EditBox xBox;
     private EditBox yBox;
@@ -58,7 +67,7 @@ public class ObjectiveEditorScreen extends Screen {
         QuestTheme theme = QuestTheme.current();
         int padding = theme.padding();
         panelWidth = Math.min(430, width - 16);
-        panelHeight = Math.min(286, height - 16);
+        panelHeight = Math.min(300, height - 16);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
         contentX = panelX + padding;
@@ -67,6 +76,8 @@ public class ObjectiveEditorScreen extends Screen {
 
         labels.clear();
         textBox = null;
+        targetBox = null;
+        countBox = null;
         dimensionBox = null;
         xBox = null;
         yBox = null;
@@ -77,16 +88,43 @@ public class ObjectiveEditorScreen extends Screen {
         int y = contentY;
         addRenderableWidget(QuestButton.normal(typeLabel(), button -> {
             captureFields();
-            draft.type = draft.type == Objective.Type.VISIT ? Objective.Type.MANUAL : Objective.Type.VISIT;
-            rebuildWidgets();
-        }, contentX, y, 150, 18));
+            cycleType(hasShiftDown() ? -1 : 1);
+        }, contentX, y, 180, 18));
         y += 26;
 
         labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.objective_text")));
         textBox = addEditBox(contentX + 96, y, contentWidth - 96, draft.text, 200);
         y += 26;
 
-        if (draft.type == Objective.Type.VISIT) {
+        if (draft.type != null && draft.type.isCounter()) {
+            if (draft.type.needsTarget()) {
+                labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.target")));
+                int pickWidth = 120;
+                targetBox = addEditBox(contentX + 96, y, contentWidth - 96 - pickWidth - 6,
+                        draft.normalizeTarget(), 200);
+                addRenderableWidget(QuestButton.normal(Component.translatable("storyquest.editor.pick_target"),
+                        button -> pickTarget(), contentX + contentWidth - pickWidth, y, pickWidth, 18));
+                y += 26;
+            }
+
+            Component countLabel = draft.type == Objective.Type.TIMER
+                    ? Component.translatable("storyquest.editor.field.seconds")
+                    : Component.translatable("storyquest.editor.field.count");
+            labels.add(new Label(contentX, y + 5, countLabel));
+            countBox = addEditBox(contentX + 96, y, 70, Integer.toString(Math.max(1, draft.count)), 7);
+            if (draft.type == Objective.Type.COLLECT) {
+                addRenderableWidget(QuestButton.normal(consumeLabel(), button -> {
+                    draft.consume = !draft.consume;
+                    button.setMessage(consumeLabel());
+                }, contentX + 176, y, contentWidth - 176, 18));
+            }
+            y += 26;
+
+            String hintKey = draft.type == Objective.Type.TIMER
+                    ? "storyquest.editor.hint.timer"
+                    : "storyquest.editor.hint.counter";
+            labels.add(new Label(contentX, y + 2, Component.translatable(hintKey)));
+        } else if (draft.type == Objective.Type.VISIT) {
             labels.add(new Label(contentX, y + 5, Component.translatable("storyquest.editor.field.dimension")));
             dimensionBox = addEditBox(contentX + 96, y, contentWidth - 96, draft.normalizeDimension(), 100);
             y += 26;
@@ -139,6 +177,57 @@ public class ObjectiveEditorScreen extends Screen {
         return Component.translatable("storyquest.editor.type_label", type);
     }
 
+    private Component consumeLabel() {
+        return Component.literal(draft.consume ? "[\u2714] " : "[  ] ")
+                .append(Component.translatable("storyquest.editor.consume_items"));
+    }
+
+    private void cycleType(int direction) {
+        Objective.Type[] types = Objective.Type.values();
+        int next = Math.floorMod(draft.type.ordinal() + direction, types.length);
+        draft.type = types[next];
+        draft.count = Math.max(1, draft.count);
+        rebuildWidgets();
+    }
+
+    /** Fills the target field from the held item or the block/entity under the crosshair. */
+    private void pickTarget() {
+        captureFields();
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null) {
+            return;
+        }
+        ResourceLocation id = null;
+        switch (draft.type) {
+            case COLLECT, CRAFT -> {
+                ItemStack held = minecraft.player.getMainHandItem();
+                if (!held.isEmpty()) {
+                    id = BuiltInRegistries.ITEM.getKey(held.getItem());
+                }
+            }
+            case KILL -> {
+                if (minecraft.hitResult instanceof EntityHitResult hit) {
+                    id = EntityType.getKey(hit.getEntity().getType());
+                }
+            }
+            case MINE, INTERACT -> {
+                if (minecraft.hitResult instanceof BlockHitResult hit) {
+                    BlockState state = minecraft.player.level().getBlockState(hit.getBlockPos());
+                    id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+                }
+            }
+            default -> {
+                // Manual, visit and timer objectives have no target.
+            }
+        }
+        if (id != null) {
+            draft.target = id.toString();
+            if (targetBox != null) {
+                targetBox.setValue(draft.target);
+            }
+        }
+    }
+
     private void useMyPosition() {
         var player = Minecraft.getInstance().player;
         if (player == null) {
@@ -167,6 +256,12 @@ public class ObjectiveEditorScreen extends Screen {
         if (textBox != null) {
             draft.text = textBox.getValue();
         }
+        if (targetBox != null) {
+            draft.target = Objective.normalizeTarget(targetBox.getValue());
+        }
+        if (countBox != null) {
+            draft.count = Math.max(1, Math.min(1_000_000, parseInt(countBox, draft.count)));
+        }
         if (draft.type == Objective.Type.VISIT) {
             if (dimensionBox != null) {
                 draft.dimension = dimensionBox.getValue();
@@ -189,6 +284,12 @@ public class ObjectiveEditorScreen extends Screen {
         draft.text = textBox == null ? draft.text : textBox.getValue().trim();
         if (draft.text.isBlank()) {
             draft.text = Component.translatable("storyquest.editor.objective", index + 1).getString();
+        }
+        if (targetBox != null) {
+            draft.target = Objective.normalizeTarget(targetBox.getValue());
+        }
+        if (countBox != null) {
+            draft.count = Math.max(1, Math.min(1_000_000, parseInt(countBox, draft.count)));
         }
         if (draft.type == Objective.Type.VISIT) {
             if (dimensionBox != null) {
@@ -249,6 +350,14 @@ public class ObjectiveEditorScreen extends Screen {
             }
         }
 
+        if (draft.type != null && draft.type.needsTarget() && targetBox != null
+                && targetBox.getValue().isBlank()) {
+            String warning = font.plainSubstrByWidth(
+                    Component.translatable("storyquest.editor.warn_no_target").getString(), contentWidth);
+            graphics.drawString(font, warning, contentX,
+                    panelY + panelHeight - theme.padding() - 44, 0xB4402F, false);
+        }
+
         for (var renderable : this.renderables) {
             renderable.render(graphics, mouseX, mouseY, partialTick);
         }
@@ -260,6 +369,17 @@ public class ObjectiveEditorScreen extends Screen {
         }
         try {
             return Double.parseDouble(box.getValue().trim());
+        } catch (NumberFormatException exception) {
+            return fallback;
+        }
+    }
+
+    private static int parseInt(EditBox box, int fallback) {
+        if (box == null) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(box.getValue().trim());
         } catch (NumberFormatException exception) {
             return fallback;
         }
