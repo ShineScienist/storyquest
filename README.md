@@ -5,18 +5,70 @@
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62b47a.svg)](https://www.minecraft.net/)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1%2B-e04e14.svg)](https://neoforged.net/)
 
-Квестовая система для **Minecraft 1.21.1 / NeoForge**, заточенная под сюжетные карты и приключения.
-В отличие от FTB Quests здесь нет «дерева крафтов»: квесты — это главы истории, диалоги,
-зоны и команды. Всё создаётся прямо в игре; JSON используется только для обмена,
-переноса между мирами и ручного редактирования.
+A flexible quest system for Minecraft map makers, modpack creators and storytellers.
+StoryQuest provides configurable objectives, quest progression and an intuitive in-game editor
+for building custom adventures — without a crafting tree. Quests are chapters of a story:
+dialogues, zones, commands and scripted events. Everything is created in game; JSON is used
+only for exchange, world transfers and manual editing.
+
+Гибкая система квестов для Minecraft, ориентированная на создателей сюжетных карт,
+модпаков и рассказчиков.StoryQuest предоставляет настраиваемые цели, прогрессию квестов
+и интуитивный редактор в игре для создания собственных приключений — без дерева крафтов.
+Квесты — это главы истории: диалоги, зоны, команды и сюжетные скрипты. Всё создаётся
+прямо в игре; JSON используется только для обмена, переноса между мирами и ручного редактирования.
+
+> **Status:** stable **1.2.0** published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/storyquest);
+> beta **1.4.0-beta.1** with counter objectives (kill, collect, craft, mine, interact, timer)
+> and Paper/Book UI themes is ready for testing.
+> Download release jars from the project page, not from CI artifacts.
 
 > **Статус:** стабильная версия **1.2.0** опубликована на
-> [CurseForge](https://www.curseforge.com/minecraft/mc-mods/storyquest); бета **1.3.0-beta.3**
-> с темами Paper/Book готова к публикации. Готовится **1.4.0-beta.1** — цели-счётчики
-> (убийства, предметы, крафт, добыча, взаимодействие и таймер).
+> [CurseForge](https://www.curseforge.com/minecraft/mc-mods/storyquest); бета **1.4.0-beta.1**
+> с целями-счётчиками (убийства, предметы, крафт, добыча, взаимодействие, таймер)
+> и темами Paper/Book готова к тестированию.
 > Скачивайте релизные jar со страницы проекта, а не из CI-артефактов.
 
+## Features
+
+- **In-game quest editor** (key `K`, operator permission required).
+- **Quest journal** (key `J`): chapters, states, objectives, descriptions.
+- **Two UI themes** — Paper (parchment) and Book (leather spine), switchable without restarting.
+- **HUD tracker** for the tracked quest with configurable anchor, offset, scale and opacity.
+- **Dialogues** with a narrator and paginated text on quest start and completion.
+- **Counter objectives:** Kill, Collect, Craft, Mine, Interact and Timer — counted automatically
+  while the quest is active.
+- **Non-counter objectives:** Manual (command/script) and Visit (spherical area).
+- **Quest markers and waypoints** for Visit objectives: checkmark, pin or star icon, light beam,
+  and a top-screen compass with direction and distance.
+- **Conditions and branches:** required quests (all or any), hide-until-available, branch
+  exclusion and shared co-op quests.
+- **Start and completion commands** — the main storytelling tool, executed as the player.
+- **JSON export/import** for world transfers, backups and manual editing.
+- Per-player progress is saved separately and **survives death and respawn**. Shared co-op
+  progress is stored in the world.
+- Quests are stored **inside the world file**, so they travel with the map.
+
 ## Что уже есть
+
+- **Редактор квестов в игре** (клавиша `K`, нужны права оператора).
+- **Журнал квестов** (клавиша `J`): главы, состояния, цели, описание.
+- **Две темы интерфейса** — Paper (пергамент) и Book (кожаный переплёт). Тема
+  переключается кнопкой в журнале или в настройках, без перезапуска игры.
+- **HUD-трекер** активного квеста с настройкой угла, масштаба и прозрачности.
+- **Диалоги** с рассказчиком и постраничным текстом (вступление и финал квеста).
+- **Цели-счётчики:** `Убийство`, `Собрать`, `Скрафтить`, `Добыть`, `Взаимодействие`
+  и `Таймер` — автоматически считаются, пока квест активен.
+- **Цели без счётчика:** `Вручую` (команда/скрипт) и `Посещение` (сфера в мире).
+- **Метки и вейпоинты** для целей «Посещение»: галочка, булавка или звезда над точкой,
+  столб света и HUD-компас с направлением и расстоянием.
+- **Условия и ветки:** квесты могут требовать завершённые квесты (все или любой один),
+  скрываться до выполнения условий и блокировать альтернативные ветки.
+- **Общие квесты для коопа:** один прогресс на мир, старт и цели зас считаются всей группе.
+- **Команды при старте и завершении квеста** — главный инструмент сюжетной карты.
+- **Экспорт и импорт JSON:** перенос квестов между мирами, резервные копии и ручное редактирование.
+- Личный прогресс каждого игрока сохраняется отдельно и **не сбрасывается после смерти**.
+  Прогресс общих квестов хранится в мире.
+- Квесты хранятся **в fileе мира**, поэтому копируются вместе с картой.
 
 - **Редактор квестов в игре** (клавиша `K`, нужны права оператора).
 - **Журнал квестов** (клавиша `J`): главы, состояния, цели, описание.
@@ -405,6 +457,28 @@ JSON — формат обмена, а не основное хранилище.
 
 ---
 
+## Limitations (current version)
+
+- One active tracker in the HUD (several quests can be active at once).
+- Markers and compass only show for the tracked quest.
+- No branching dialogue trees — branching is done through conditions and commands.
+  Branching dialogues are planned for 1.5.0.
+- Objectives by item tags, NBT filters and advancements are not supported yet: use exact
+  item, block and entity IDs. This is the next step in 1.4.0.
+- Co-op in 1.2.0+ uses one shared world progress. Separate parties are planned for 1.5.0.
+  Shared quest commands run for all online players, so rewards are granted only to those
+  who were online when the quest started or completed.
+- JSON export/import is command-based; editor buttons are not included yet.
+- The editor is operator-only; players see the journal and dialogues.
+
+### Next steps (1.4.0)
+
+- Advanced targets: item tags, NBT, advancements, statistics, XP, biome/structure/dimension.
+- Rewards: items, XP, loot tables, commands, choice rewards.
+- Multiple tracked quests and completion progress bar.
+- Export/import buttons in the editor.
+- Map migration guides and FTB Quests conversion examples.
+
 ## Ограничения текущей версии
 
 - Один активный трекер в HUD (несколько квестов могут быть активны одновременно).
@@ -419,14 +493,29 @@ JSON — формат обмена, а не основное хранилище.
 - Экспорт и импорт доступны командами; кнопок в редакторе пока нет.
 - Редактор доступен только операторам; игроки видят журнал и диалоги.
 
+### Следующие шаги (1.4.0)
+
+- Сложные цели: теги предметов, NBT, advancement, statistic, XP, биом/структура/измерение.
+- Награды: предметы, опыт, лут-таблицы, команды, выбор награды.
+- Несколько отслеживаемых квестов и прогресс-бар выполнения.
+- Кнопки экспорта и импорта в редакторе.
+- Руководства по миграции карт и примеры конвертации с FTB Quests.
+
 ---
 
-## Участие
+## Участие / Contributing
 
 - Баги и предложения — через [Issues](https://github.com/ShineScienist/storyquest/issues).
 - Pull requests приветствуются: держите изменения в одном экране/модуле, прикладывайте шаги проверки.
 - Перед PR: `gradlew build` и ручная проверка затронутых экранов в игре.
 - Не добавляйте в репозиторий собранные jar, логи, миры и скриншоты.
+- Подробный план и статус релизов — в [docs/ROADMAP.md](docs/ROADMAP.md).
+
+- Bugs and feature requests: [Issues](https://github.com/ShineScienist/storyquest/issues).
+- Pull requests are welcome — keep changes focused on one screen or module, include test steps.
+- Before a PR: `gradlew build` plus a manual in-game check of the affected screens.
+- Do not commit built jars, logs, worlds or screenshots.
+- Release status and roadmap: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## 1.4.0-beta.1
 
-Counter objectives: the first step towards replacing FTB Quests.
+Counter objectives: the foundation for automated quest progression.
 
 - Six new objective types that complete automatically while the quest is active:
   - **Kill** — defeat a mob (`minecraft:zombie`, `minecraft:creeper`, ...);
