@@ -3,15 +3,27 @@
 Актуальные планы после 1.2.0. Историческая дорожная карта 1.2.0:
 [ROADMAP-1.2.0.md](ROADMAP-1.2.0.md).
 
+## Release status
+
+- 1.0.0 and 1.1.0 are published on Modrinth and CurseForge.
+- 1.2.0 is published on CurseForge.
+- 1.3.0-beta.3 is tagged `v1.3.0-beta.3` and published on CurseForge.
+- 1.4.0-beta.1 is tagged `v1.4.0-beta.1` and published on CurseForge; counter
+  objectives (kill, collect, craft, mine, interact, timer) are included.
+- Releases are published manually; CI builds and publishes nothing.
+- The repository is open: source code, issues and pull requests.
+- 1.2.x is bug-fix only. New features go to 1.3.0, 1.4.0, 1.5.0 and 1.6.0.
+
 ## Статус релизов
 
 - 1.0.0 и 1.1.0 опубликованы на Modrinth и CurseForge.
-- 1.2.0 опубликован на CurseForge; версии публикует автор вручную.
-- 1.3.0-beta.3 проверена в игре и помечена тегом `v1.3.0-beta.3`; публикация вручную.
-- 1.4.0-beta.1 закоммитирована: цели-счётчики (kill, collect, craft, mine, interact, timer).
-- Автоматическую загрузку и публикацию не делаем.
+- 1.2.0 опубликован на CurseForge.
+- 1.3.0-beta.3 помечена тегом `v1.3.0-beta.3` и опубликована на CurseForge.
+- 1.4.0-beta.1 помечена тегом `v1.4.0-beta.1` и опубликована на CurseForge; входят
+  цели-счётчики (kill, collect, craft, mine, interact, timer).
+- Релизы публикуются вручную; CI только собирает и проверяет.
 - Репозиторий открыт: исходники, issues и pull requests.
-- 1.2.x - только исправления после релиза. Новые функции идут в 1.3.0, 1.4.0, 1.5.0 и 1.6.0.
+- 1.2.x — только исправления после релиза. Новые функции идут в 1.3.0, 1.4.0, 1.5.0 и 1.6.0.
 
 ## 1.3.0 - Темы интерфейса: Paper и Book
 
@@ -79,7 +91,7 @@
 - `1.3.0-beta.2`: смягчённая палитра текста и исправленные русские строки темы.
 - `1.3.0-beta.3`: длинные названия глав больше не обрезаются посреди слова; в редакторе
   глава и число целей разведены по краям строки; шапка журнала в теме Book опущена ниже рамки.
-- Осталось: публикация автором. Проверка в игре выполнена.
+- 1.3.0-beta.3 is published on CurseForge; in-game testing completed.
 
 ### Ограничения
 
@@ -126,7 +138,8 @@
 - JSON `formatVersion: 2`; файлы версии 1 читаются без миграции.
 - Старые миры, 1.3.0-темы и серверная логика условий не ломаются.
 
-Статус: код готов, сборка проходит, коммит на `main`. Проверка в игре и публикация - за автором.
+Статус: код готов, сборка проходит, коммит на `main`. Релиз 1.4.0-beta.1 опубликован
+на CurseForge; проверка в игре и обратная связь — через Issues.
 
 ### 1.4.0-beta.2 - сложные цели
 
@@ -268,10 +281,11 @@
 - Редактор дерева диалога.
 - Обратная совместимость с линейными диалогами.
 
-## Правило релизов
+## Release rules
 
-- Автор публикует версии на Modrinth и CurseForge самостоятельно.
-- `main` содержит следующую бету; 1.4.0-beta.1 не публикуется до проверки автором.
-- Планирование, мокапы и обновление документации не считаются началом релиза.
-- Перед релизом обновлять `gradle.properties`, `CHANGELOG.md`, `README.md` и
+- Releases are published manually after in-game testing and review.
+- `main` holds the next beta; a release is cut as a tag on `main` and published to
+  CurseForge and Modrinth.
+- Planning, mockups and documentation updates are not counted as the start of a release.
+- Before a release, update `gradle.properties`, `CHANGELOG.md`, `README.md` and
   `docs/PUBLISHING.md`.

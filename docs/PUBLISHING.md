@@ -1,11 +1,11 @@
-# Публикация StoryQuest
+# Publishing StoryQuest
 
-> **Статус:** 1.2.0 опубликован на CurseForge; бета 1.3.0-beta.3 готова к публикации.
-> Тексты ниже — шаблон для следующего релиза: перед загрузкой 1.4.0-beta.1 обновите версию,
-> changelog и имя файла. Цели-счётчики уже входят в 1.4.0-beta.1.
+> **Status:** 1.2.0 and 1.4.0-beta.1 are published on CurseForge.
+> The texts below are templates for the next release: update the version, changelog and
+> file name before uploading. Counter objectives are included from 1.4.0-beta.1.
 
-Здесь лежат готовые тексты и пошаговая инструкция для CurseForge и Modrinth.
-Ничего дополнительно настраивать не нужно: jar, иконка, лицензия и метаданные уже в проекте.
+Here are the ready-made texts and step-by-step instructions for CurseForge and Modrinth.
+Nothing extra is needed: the jar, icon, license and metadata are already in the project.
 
 ## Что публикуем
 
